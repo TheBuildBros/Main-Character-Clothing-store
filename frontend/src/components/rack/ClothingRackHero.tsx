@@ -3,15 +3,12 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { CONTENT } from "./rackContent";
-import ProductPopup, { GarmentPlaceholderSvg } from "./ProductPopup";
 import "./rack.css";
 
 interface GarmentSimState {
   // Pendulum state (degrees, deg/s)
   a: number;
   v: number;
-  // Trailing price tag angle (degrees)
-  tagAngle: number;
   // Hover/focus turn progress (0 = side, 1 = front)
   k: number;
   targetK: number;
@@ -42,10 +39,6 @@ function smoothstep(x: number): number {
   return t * t * (3 - 2 * t);
 }
 
-function formatTagPrice(price: string): string {
-  return price.replace(/\.00$/, "");
-}
-
 function getSideWhitenClass(src?: string): string {
   if (!src) return "";
   // Compensate for slightly off-white backgrounds on opaque side assets
@@ -53,6 +46,81 @@ function getSideWhitenClass(src?: string): string {
   if (src.includes("t-shirt-side")) return "rack-img-soft-whiten-light";
   if (src.includes("jersey-side")) return "rack-img-soft-whiten-subtle";
   return "";
+}
+
+function GarmentPlaceholderSvg({
+  variant,
+  className = "",
+}: {
+  variant: "side" | "front";
+  className?: string;
+}) {
+  if (variant === "side") {
+    return (
+      <svg
+        viewBox="0 0 120 400"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+        aria-hidden="true"
+      >
+        {/* Hanger hook */}
+        <path
+          d="M54 20 C54 10, 68 10, 68 20 C68 27, 60 30, 60 37 L60 50"
+          stroke="#8a867e"
+          strokeWidth="3.5"
+          strokeLinecap="round"
+        />
+        {/* Hanger wood */}
+        <path
+          d="M52 54 C52 49, 68 49, 68 54 L72 74 L48 74 Z"
+          fill="#a8a39a"
+        />
+        {/* Narrow garment side silhouette */}
+        <path
+          d="M44 74 C52 68, 72 68, 78 78 L90 120 L86 376 C86 382, 80 386, 74 386 L40 382 C34 382, 30 377, 30 370 L32 126 Z"
+          fill="#d3cfc6"
+        />
+        <path
+          d="M58 92 L66 368"
+          stroke="#beb9ae"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+      </svg>
+    );
+  }
+
+  return (
+    <svg
+      viewBox="0 0 268 400"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      aria-hidden="true"
+    >
+      {/* Hanger hook */}
+      <path
+        d="M127 20 C127 10, 143 10, 143 20 C143 27, 134 30, 134 37 L134 50"
+        stroke="#8a867e"
+        strokeWidth="3.5"
+        strokeLinecap="round"
+      />
+      {/* Hanger shoulders */}
+      <path
+        d="M134 50 L82 76 L186 76 Z"
+        fill="#a8a39a"
+        stroke="#a8a39a"
+        strokeWidth="4"
+        strokeLinejoin="round"
+      />
+      {/* Wide garment front silhouette */}
+      <path
+        d="M104 72 C116 84, 152 84, 164 72 L212 90 L246 198 L206 212 L194 152 L198 378 C198 384, 193 388, 187 388 L81 388 C75 388, 70 384, 70 378 L74 152 L62 212 L22 198 L56 90 Z"
+        fill="#d3cfc6"
+      />
+    </svg>
+  );
 }
 
 export default function ClothingRackHero() {
@@ -70,10 +138,8 @@ export default function ClothingRackHero() {
   // DOM refs
   const sectionRef = useRef<HTMLElement | null>(null);
   const rackAreaRef = useRef<HTMLDivElement | null>(null);
-  const slotRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const slotRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   const mediaLayerRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const tagLayerRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const tagPivotRefs = useRef<(HTMLDivElement | null)[]>([]);
   const sideWrapRefs = useRef<(HTMLDivElement | null)[]>([]);
   const frontWrapRefs = useRef<(HTMLDivElement | null)[]>([]);
   const sideImgRefs = useRef<(HTMLImageElement | null)[]>([]);
@@ -83,10 +149,6 @@ export default function ClothingRackHero() {
   const [garmentHeight, setGarmentHeight] = useState<number>(320);
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
-  const [popupOriginRect, setPopupOriginRect] = useState<DOMRect | null>(null);
-  const [prefersReducedMotion, setPrefersReducedMotion] =
-    useState<boolean>(false);
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
 
   // Mutable simulation & environment state accessed by the single RAF loop
@@ -98,7 +160,6 @@ export default function ClothingRackHero() {
     canHover: boolean;
     reducedMotion: boolean;
     inView: boolean;
-    hiddenIndex: number | null;
     garments: GarmentSimState[];
   }>({
     rafId: null,
@@ -108,11 +169,9 @@ export default function ClothingRackHero() {
     canHover: false,
     reducedMotion: false,
     inView: false,
-    hiddenIndex: null,
     garments: items.map((_, i) => ({
       a: 0,
       v: 0,
-      tagAngle: 0,
       k: 0,
       targetK: 0,
       dropStarted: false,
@@ -134,7 +193,6 @@ export default function ClothingRackHero() {
 
     const h = sim.height;
     const e = smoothstep(g.k);
-    const isHiddenForPopup = sim.hiddenIndex === i;
 
     const sideW = h * g.sideAspect;
     const frontW = h * g.frontAspect;
@@ -152,8 +210,8 @@ export default function ClothingRackHero() {
     const liftY = -6 * e;
     const totalY = g.dropY + liftY;
     const wholeRotY = -12 * (1 - e);
-    const visible = !isHiddenForPopup && g.dropOpacity > 0.001;
-    const opacityStr = isHiddenForPopup ? "0" : g.dropOpacity.toFixed(3);
+    const visible = g.dropOpacity > 0.001;
+    const opacityStr = g.dropOpacity.toFixed(3);
     const visibilityStr = visible ? "visible" : "hidden";
 
     const mediaEl = mediaLayerRefs.current[i];
@@ -162,20 +220,6 @@ export default function ClothingRackHero() {
       mediaEl.style.opacity = opacityStr;
       mediaEl.style.visibility = visibilityStr;
       mediaEl.style.zIndex = e > 0.02 ? "10" : "1";
-    }
-
-    const tagLayerEl = tagLayerRefs.current[i];
-    if (tagLayerEl) {
-      tagLayerEl.style.transform = `translate3d(0, ${totalY.toFixed(2)}px, 0) rotate(${g.a.toFixed(2)}deg)`;
-      tagLayerEl.style.opacity = opacityStr;
-      tagLayerEl.style.visibility = visibilityStr;
-      tagLayerEl.style.zIndex = e > 0.02 ? "11" : "2";
-    }
-
-    const tagPivotEl = tagPivotRefs.current[i];
-    if (tagPivotEl) {
-      const tagDiff = g.a - g.tagAngle;
-      tagPivotEl.style.transform = `rotate(${(-24 + tagDiff).toFixed(2)}deg)`;
     }
 
     // Side photo: rotates perspective(900px) rotateY(0 -> -88deg) in first half, disappears edge-on
@@ -295,17 +339,7 @@ export default function ClothingRackHero() {
           }
         }
 
-        // 3. Tag lag: tagAngle += (a - tagAngle) * (1 - e^(-7 * dt))
-        if (g.a !== 0 || g.tagAngle !== 0) {
-          g.tagAngle += (g.a - g.tagAngle) * (1 - Math.exp(-7 * dt));
-          if (g.a === 0 && Math.abs(g.tagAngle) < 0.01) {
-            g.tagAngle = 0;
-          } else {
-            moving = true;
-          }
-        }
-
-        // 4. Hover / focus turn exponential smoothing (tau ~260ms)
+        // 3. Hover / focus turn exponential smoothing (tau ~260ms)
         if (g.k !== g.targetK) {
           if (sim.reducedMotion) {
             g.k = g.targetK;
@@ -391,7 +425,6 @@ export default function ClothingRackHero() {
   const activateGarmentHover = useCallback(
     (index: number) => {
       const sim = simRef.current;
-      if (sim.hiddenIndex !== null) return;
       const g = sim.garments[index];
       if (!g) return;
 
@@ -448,13 +481,11 @@ export default function ClothingRackHero() {
     const syncMedia = () => {
       sim.canHover = hoverMq.matches;
       sim.reducedMotion = motionMq.matches;
-      setPrefersReducedMotion(motionMq.matches);
 
       if (motionMq.matches) {
         for (const g of sim.garments) {
           g.a = 0;
           g.v = 0;
-          g.tagAngle = 0;
           g.dropStarted = true;
           g.dropDone = true;
           g.dropY = 0;
@@ -472,11 +503,21 @@ export default function ClothingRackHero() {
     // Read already-cached image dimensions if complete before hydration
     for (let i = 0; i < sim.garments.length; i++) {
       const sImg = sideImgRefs.current[i];
-      if (sImg && sImg.complete && sImg.naturalWidth > 0 && sImg.naturalHeight > 0) {
+      if (
+        sImg &&
+        sImg.complete &&
+        sImg.naturalWidth > 0 &&
+        sImg.naturalHeight > 0
+      ) {
         sim.garments[i].sideAspect = sImg.naturalWidth / sImg.naturalHeight;
       }
       const fImg = frontImgRefs.current[i];
-      if (fImg && fImg.complete && fImg.naturalWidth > 0 && fImg.naturalHeight > 0) {
+      if (
+        fImg &&
+        fImg.complete &&
+        fImg.naturalWidth > 0 &&
+        fImg.naturalHeight > 0
+      ) {
         sim.garments[i].frontAspect = fImg.naturalWidth / fImg.naturalHeight;
       }
     }
@@ -557,7 +598,7 @@ export default function ClothingRackHero() {
       lastScrollY = currentY;
       lastScrollTime = now;
 
-      if (!sim.inView || sim.reducedMotion || sim.hiddenIndex !== null) return;
+      if (!sim.inView || sim.reducedMotion) return;
       if (Math.abs(dy) < 1) return;
 
       const scrollSpeed = dy / dtScroll; // px/s
@@ -617,71 +658,19 @@ export default function ClothingRackHero() {
     setFailedImages((prev) => ({ ...prev, [`${index}-${kind}`]: true }));
   };
 
-  // Open product popup on garment click
-  const handleGarmentClick = (index: number) => {
-    const slotEl = slotRefs.current[index];
-    const rect = slotEl ? slotEl.getBoundingClientRect() : null;
-
-    simRef.current.hiddenIndex = index;
-    applyGarmentDom(index);
-
-    setPopupOriginRect(rect);
-    setOpenIndex(index);
-  };
-
-  // Restore garment on rack when popup finishes closing
-  const handlePopupCloseComplete = useCallback(() => {
-    const closedIdx = simRef.current.hiddenIndex;
-    simRef.current.hiddenIndex = null;
-
-    if (closedIdx !== null) {
-      const g = simRef.current.garments[closedIdx];
-      if (g) {
-        g.targetK = 0;
-        if (simRef.current.reducedMotion) {
-          g.k = 0;
-        } else {
-          // Hang-back swing nudge
-          const dir = closedIdx % 2 === 0 ? 1 : -1;
-          g.v += dir * 26;
-        }
-      }
-      applyGarmentDom(closedIdx);
-      if (!simRef.current.reducedMotion) {
-        wakeSimulation();
-      }
-    }
-
-    setOpenIndex(null);
-    setHoveredIndex(null);
-    setPopupOriginRect(null);
-
-    // Return keyboard focus to the garment button that opened the popup
-    if (closedIdx !== null) {
-      window.requestAnimationFrame(() => {
-        slotRefs.current[closedIdx]?.focus();
-      });
-    }
-  }, [applyGarmentDom, wakeSimulation]);
-
   // Pull garment hooks slightly up onto the 8px rod so hook tops touch the rod cleanly
   const hookLiftOffset = Math.round(garmentHeight * 0.058) + 3;
 
   return (
     <section
       ref={sectionRef}
-      aria-label="New Season Clothing Rack"
-      className="rack-hero-bg relative flex min-h-[100svh] w-full flex-col items-center justify-center overflow-x-clip px-4 py-6 sm:px-8 sm:py-8 lg:px-12 text-neutral-950"
+      aria-label="Shop by Category Clothing Rack"
+      className="rack-hero-bg relative flex min-h-[100svh] w-full flex-col items-center justify-center overflow-x-clip px-4 pt-24 pb-10 sm:px-8 sm:pt-24 sm:pb-12 lg:px-12 text-neutral-950"
     >
       {/* Top Eyebrow */}
-      <div
-        className="rack-fade-up rack-fade-delay-0 mb-3.5 flex items-center justify-center gap-3 text-[12px] font-semibold uppercase tracking-[2px] text-neutral-950 select-none"
-      >
+      <div className="rack-fade-up rack-fade-delay-0 mb-3.5 flex items-center justify-center gap-3 text-[12px] font-semibold uppercase tracking-[2px] text-neutral-950 select-none">
         <span>{CONTENT.eyebrow.title}</span>
-        <span
-          aria-hidden="true"
-          className="h-3 w-px bg-neutral-950/25"
-        />
+        <span aria-hidden="true" className="h-3 w-px bg-neutral-950/25" />
         <span className="opacity-45">{CONTENT.eyebrow.subtitle}</span>
       </div>
 
@@ -732,18 +721,21 @@ export default function ClothingRackHero() {
           >
             {items.map((item, i) => {
               const sideFailed = !item.side || Boolean(failedImages[`${i}-side`]);
-              const frontFailed = !item.front || Boolean(failedImages[`${i}-front`]);
-              const tagPrice = formatTagPrice(item.price);
+              const frontFailed =
+                !item.front || Boolean(failedImages[`${i}-front`]);
               const sideWhiten = getSideWhitenClass(item.side);
+              const flipStyle = item.flipX
+                ? ({ transform: "scaleX(-1)" } as const)
+                : undefined;
 
               return (
-                <button
+                <Link
                   key={item.name}
+                  href={item.url}
                   ref={(el) => {
                     slotRefs.current[i] = el;
                   }}
-                  type="button"
-                  aria-label={`Inspect ${item.name}, ${item.price}`}
+                  aria-label={`Shop ${item.name}`}
                   onMouseEnter={() => {
                     if (simRef.current.canHover) {
                       activateGarmentHover(i);
@@ -762,14 +754,13 @@ export default function ClothingRackHero() {
                   onBlur={() => {
                     deactivateGarmentHover(i);
                   }}
-                  onClick={() => handleGarmentClick(i)}
-                  className="rack-garment-btn relative shrink-0 cursor-pointer border-0 bg-transparent p-0 text-left focus:outline-none"
+                  className="rack-garment-link relative block shrink-0 cursor-pointer no-underline focus:outline-none"
                   style={{
                     width: `${(garmentHeight * DEFAULT_SIDE_ASPECT).toFixed(2)}px`,
                     height: `${garmentHeight}px`,
                   }}
                 >
-                  {/* Layer 1: Garment Photos (mix-blend-mode: multiply blends seamlessly onto warm backdrop) */}
+                  {/* Garment Photos (mix-blend-mode: multiply blends seamlessly onto warm backdrop) */}
                   <div
                     ref={(el) => {
                       mediaLayerRefs.current[i] = el;
@@ -790,25 +781,31 @@ export default function ClothingRackHero() {
                       className="absolute inset-0 flex items-start justify-center"
                       style={{ transformOrigin: "center center" }}
                     >
-                      {!sideFailed ? (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img
-                          ref={(el) => {
-                            sideImgRefs.current[i] = el;
-                          }}
-                          src={item.side}
-                          alt={`${item.name} side view`}
-                          draggable={false}
-                          onLoad={(e) => handleImageLoad(i, "side", e)}
-                          onError={() => handleImageError(i, "side")}
-                          className={`h-full w-auto max-w-none select-none object-contain ${sideWhiten}`}
-                        />
-                      ) : (
-                        <GarmentPlaceholderSvg
-                          variant="side"
-                          className="h-full w-auto"
-                        />
-                      )}
+                      {/* Inner wrapper isolates optional flipX from 3D turn/swing transforms */}
+                      <div
+                        className="flex h-full items-start justify-center"
+                        style={flipStyle}
+                      >
+                        {!sideFailed ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img
+                            ref={(el) => {
+                              sideImgRefs.current[i] = el;
+                            }}
+                            src={item.side}
+                            alt={`${item.name} side view`}
+                            draggable={false}
+                            onLoad={(e) => handleImageLoad(i, "side", e)}
+                            onError={() => handleImageError(i, "side")}
+                            className={`h-full w-auto max-w-none select-none object-contain ${sideWhiten}`}
+                          />
+                        ) : (
+                          <GarmentPlaceholderSvg
+                            variant="side"
+                            className="h-full w-auto"
+                          />
+                        )}
+                      </div>
                     </div>
 
                     {/* Wide Front View (revealed on second half of hover turn) */}
@@ -824,97 +821,49 @@ export default function ClothingRackHero() {
                         transform: "scale(0.9)",
                       }}
                     >
-                      {!frontFailed ? (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img
-                          ref={(el) => {
-                            frontImgRefs.current[i] = el;
-                          }}
-                          src={item.front}
-                          alt={`${item.name} front view`}
-                          draggable={false}
-                          onLoad={(e) => handleImageLoad(i, "front", e)}
-                          onError={() => handleImageError(i, "front")}
-                          className="h-full w-auto max-w-none select-none object-contain"
-                        />
-                      ) : (
-                        <GarmentPlaceholderSvg
-                          variant="front"
-                          className="h-full w-auto"
-                        />
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Layer 2: Opaque Cream Price Tag & String (sibling so multiply does not darken the cream card) */}
-                  <div
-                    ref={(el) => {
-                      tagLayerRefs.current[i] = el;
-                    }}
-                    aria-hidden="true"
-                    className="pointer-events-none absolute inset-0"
-                    style={{
-                      transformOrigin: "top center",
-                      opacity: 0,
-                      visibility: "hidden",
-                      willChange: "transform, opacity",
-                    }}
-                  >
-                    {/* Anchor near garment shoulder on right side */}
-                    <div
-                      className="absolute"
-                      style={{
-                        top: "20%",
-                        right: "16%",
-                      }}
-                    >
-                      {/* String + tag pendulum trailing garment swing */}
+                      {/* Inner wrapper isolates optional flipX from 3D turn/swing transforms */}
                       <div
-                        ref={(el) => {
-                          tagPivotRefs.current[i] = el;
-                        }}
-                        className="flex flex-col items-center"
-                        style={{
-                          transformOrigin: "top center",
-                          transform: "rotate(-24deg)",
-                        }}
+                        className="flex h-full items-start justify-center"
+                        style={flipStyle}
                       >
-                        {/* Thin twine string */}
-                        <div className="h-[18px] w-px bg-neutral-700/45" />
-
-                        {/* Cream price tag card counter-rotated ~16deg so it hangs nearly upright */}
-                        <div
-                          className="relative -mt-[2px] flex flex-col items-center rounded-t-[2px] rounded-b-[6px] border border-[#3c3020]/15 bg-[#faf6ec] px-2 pt-1.5 pb-1.5 shadow-[0_4px_10px_rgba(30,24,15,0.14)]"
-                          style={{
-                            transformOrigin: "top center",
-                            transform: "rotate(16deg)",
-                          }}
-                        >
-                          {/* Punched hole at top */}
-                          <span className="mb-1 h-[4px] w-[4px] rounded-full border border-[#3c3020]/30 bg-[#efeae0]" />
-                          <span className="text-[10px] font-bold leading-none tracking-tight text-neutral-900 tabular-nums whitespace-nowrap">
-                            {tagPrice}
-                          </span>
-                        </div>
+                        {!frontFailed ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img
+                            ref={(el) => {
+                              frontImgRefs.current[i] = el;
+                            }}
+                            src={item.front}
+                            alt={`${item.name} front view`}
+                            draggable={false}
+                            onLoad={(e) => handleImageLoad(i, "front", e)}
+                            onError={() => handleImageError(i, "front")}
+                            className="h-full w-auto max-w-none select-none object-contain"
+                          />
+                        ) : (
+                          <GarmentPlaceholderSvg
+                            variant="front"
+                            className="h-full w-auto"
+                          />
+                        )}
                       </div>
                     </div>
                   </div>
-                </button>
+                </Link>
               );
             })}
           </div>
         </div>
       </div>
 
-      {/* Below the Rack: Crossfading Text Line + Pill CTA Button */}
+      {/* Below the Rack: Crossfading Category Caption + Pill CTA Button */}
       <div className="rack-fade-up rack-fade-delay-2 mt-6 sm:mt-7 flex flex-col items-center gap-3.5">
-        {/* 15px font-weight 600 line that crossfades to hovered product's name */}
+        {/* 15px font-weight 600 line that crossfades to hovered category name */}
         <div
           aria-live="polite"
-          className="relative h-[22px] min-w-[200px] text-center text-[15px] font-semibold leading-[22px] text-neutral-900"
+          className="relative h-[22px] min-w-[240px] text-center text-[15px] font-semibold leading-[22px] text-neutral-900"
         >
           <span
-            className="absolute inset-0 flex items-center justify-center transition-all duration-200"
+            className="absolute inset-0 flex items-center justify-center transition-all duration-200 whitespace-nowrap"
             style={{
               opacity: hoveredIndex === null ? 1 : 0,
               transform:
@@ -923,10 +872,10 @@ export default function ClothingRackHero() {
                   : "translateY(-4px)",
             }}
           >
-            {CONTENT.cta.label}
+            {CONTENT.restingCaption}
           </span>
           <span
-            className="absolute inset-0 flex items-center justify-center transition-all duration-200"
+            className="absolute inset-0 flex items-center justify-center transition-all duration-200 whitespace-nowrap"
             style={{
               opacity: hoveredIndex !== null ? 1 : 0,
               transform:
@@ -947,22 +896,6 @@ export default function ClothingRackHero() {
           {CONTENT.cta.label}
         </Link>
       </div>
-
-      {/* Full-screen Product Popup */}
-      {openIndex !== null && items[openIndex] && (
-        <ProductPopup
-          item={items[openIndex]}
-          index={openIndex}
-          total={items.length}
-          sizes={CONTENT.garmentSizes}
-          originRect={popupOriginRect}
-          getOriginRect={() =>
-            slotRefs.current[openIndex]?.getBoundingClientRect() ?? null
-          }
-          prefersReducedMotion={prefersReducedMotion}
-          onCloseComplete={handlePopupCloseComplete}
-        />
-      )}
     </section>
   );
 }

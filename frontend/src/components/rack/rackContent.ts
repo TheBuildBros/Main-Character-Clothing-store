@@ -1,10 +1,9 @@
-export interface RackGarment {
+export interface RackCategoryItem {
   name: string;
-  price: string;
   url: string;
   side: string;
   front: string;
-  back: string;
+  flipX?: boolean;
 }
 
 export interface RackContent {
@@ -13,70 +12,58 @@ export interface RackContent {
     subtitle: string;
   };
   headline: string;
+  restingCaption: string;
   cta: {
     label: string;
     href: string;
   };
-  garmentSizes: readonly string[];
-  rack: readonly RackGarment[];
+  rack: readonly RackCategoryItem[];
 }
 
-// Note: All garment prices below are placeholders and can be swapped here later.
 // Image paths match the exact folders and filenames present in frontend/public/images/rack/
-// (including the space in "t -shirt" and "jersey-black.webp" for the jersey back view).
+// (including the space in the "t -shirt" folder).
 export const CONTENT: RackContent = {
-  eyebrow: { title: "BLURGVILLAGE", subtitle: "NEW SEASON" },
-  headline: "WEAR THE NEW DROP", // last word is shown at 35% opacity
-  cta: { label: "Shop the Collection", href: "/collections" },
-  garmentSizes: ["S", "M", "L", "XL"],
+  eyebrow: { title: "MAINCHARACTER", subtitle: "BROWSE BY CATEGORY" },
+  headline: "SHOP BY CATEGORY", // last word is shown at 35% opacity
+  restingCaption: "Select a category to explore",
+  cta: { label: "View All Collections", href: "/collections" },
   rack: [
     {
-      name: "Jean",
-      price: "$199.00", // placeholder price
-      url: "/collections/jean",
+      name: "Jeans",
+      url: "/collections/jeans",
       side: "/images/rack/jean/jean-side.webp",
       front: "/images/rack/jean/jean-front.webp",
-      back: "/images/rack/jean/jean-back.webp",
     },
     {
-      name: "T-Shirt",
-      price: "$79.00", // placeholder price
-      url: "/collections/t-shirt",
+      name: "T-Shirts",
+      url: "/collections/t-shirts",
       side: "/images/rack/t%20-shirt/t-shirt-side.webp",
       front: "/images/rack/t%20-shirt/t-shirt-front.webp",
-      back: "/images/rack/t%20-shirt/t-shirt-back.webp",
     },
     {
-      name: "Shirt",
-      price: "$129.00", // placeholder price
-      url: "/collections/shirt",
+      name: "Shirts",
+      url: "/collections/shirts",
       side: "/images/rack/shirt/shirt-side.webp",
       front: "/images/rack/shirt/shirt-front.webp",
-      back: "/images/rack/shirt/shirt-back.webp",
     },
     {
-      name: "Pant",
-      price: "$149.00", // placeholder price
-      url: "/collections/pant",
+      name: "Pants",
+      url: "/collections/pants",
       side: "/images/rack/pant/pant-side.webp",
       front: "/images/rack/pant/pant-front.webp",
-      back: "/images/rack/pant/pant-back.webp",
     },
     {
-      name: "Jersey",
-      price: "$99.00", // placeholder price
-      url: "/collections/jersey",
+      name: "Jerseys",
+      url: "/collections/jerseys",
       side: "/images/rack/jersey/jersey-side.webp",
       front: "/images/rack/jersey/jersey-front.webp",
-      back: "/images/rack/jersey/jersey-black.webp",
+      flipX: true,
     },
     {
-      name: "Jacket",
-      price: "$249.00", // placeholder price
-      url: "/collections/jacket",
+      name: "Jackets",
+      url: "/collections/jackets",
       side: "/images/rack/jacket/jacket-side.webp",
       front: "/images/rack/jacket/jacket-front.webp",
-      back: "/images/rack/jacket/jacket-back.webp",
     },
   ],
 };

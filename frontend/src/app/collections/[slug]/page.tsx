@@ -7,6 +7,12 @@ export function generateStaticParams() {
     { slug: "runway-archives" },
     { slug: "monochrome-series" },
     { slug: "raw-denim-collection" },
+    { slug: "jeans" },
+    { slug: "t-shirts" },
+    { slug: "shirts" },
+    { slug: "pants" },
+    { slug: "jerseys" },
+    { slug: "jackets" },
   ];
 }
 
