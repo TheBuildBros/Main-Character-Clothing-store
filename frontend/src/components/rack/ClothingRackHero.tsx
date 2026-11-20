@@ -4,7 +4,6 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { CONTENT } from "./rackContent";
 import ProductPopup, { GarmentPlaceholderSvg } from "./ProductPopup";
-import "./rack.css";
 
 interface GarmentSimState {
   // Pendulum state (degrees, deg/s)
@@ -671,33 +670,45 @@ export default function ClothingRackHero() {
     <section
       ref={sectionRef}
       aria-label="New Season Clothing Rack"
-      className="rack-hero-bg relative flex min-h-[100svh] w-full flex-col items-center justify-center overflow-x-clip px-4 py-6 sm:px-8 sm:py-8 lg:px-12 text-neutral-950"
+      className="rack-hero-bg relative flex min-h-[100svh] w-full flex-col items-center justify-center overflow-x-clip px-4 py-6 sm:px-8 sm:py-8 lg:px-12 text-[#20242B]"
     >
-      {/* Top Eyebrow */}
+      {/* Top Eyebrow — Luxury Editorial Label */}
       <div
-        className="rack-fade-up rack-fade-delay-0 mb-3.5 flex items-center justify-center gap-3 text-[12px] font-semibold uppercase tracking-[2px] text-neutral-950 select-none"
+        className="rack-fade-up rack-fade-delay-0 mb-5 flex items-center justify-center gap-4 select-none"
       >
-        <span>{CONTENT.eyebrow.title}</span>
+        <span className="h-px w-8 bg-[#20242B]/20" aria-hidden="true" />
+        <span className="text-[9px] font-semibold uppercase tracking-[0.38em] text-[#20242B]/60">
+          {CONTENT.eyebrow.title}
+        </span>
         <span
           aria-hidden="true"
-          className="h-3 w-px bg-neutral-950/25"
+          className="h-[3px] w-[3px] rounded-full bg-[#C6A76A]"
         />
-        <span className="opacity-45">{CONTENT.eyebrow.subtitle}</span>
+        <span className="text-[9px] font-semibold uppercase tracking-[0.38em] text-[#20242B]/38">
+          {CONTENT.eyebrow.subtitle}
+        </span>
+        <span className="h-px w-8 bg-[#20242B]/20" aria-hidden="true" />
       </div>
 
-      {/* Headline */}
+      {/* Headline — Luxury Serif Editorial */}
       <h1
-        className="rack-fade-up rack-fade-delay-1 mb-7 sm:mb-8 text-center font-extrabold uppercase text-neutral-950 select-none"
+        className="rack-fade-up rack-fade-delay-1 mb-8 sm:mb-10 text-center select-none"
         style={{
-          fontSize: "clamp(40px, 6.5vw, 92px)",
-          lineHeight: 0.95,
-          letterSpacing: "-0.045em",
-          maxWidth: "14ch",
+          fontFamily: "'Cormorant Garamond', 'Playfair Display', Georgia, serif",
+          fontSize: "clamp(48px, 7.5vw, 108px)",
+          lineHeight: 0.9,
+          letterSpacing: "-0.02em",
+          maxWidth: "16ch",
+          fontWeight: 600,
+          color: "#0B1F3A",
+          fontStyle: "italic",
         }}
       >
         {headlineLeading}{" "}
         {headlineLastWord && (
-          <span className="opacity-35">{headlineLastWord}</span>
+          <span style={{ opacity: 0.3, fontStyle: "normal", fontWeight: 300 }}>
+            {headlineLastWord}
+          </span>
         )}
       </h1>
 
@@ -906,45 +917,46 @@ export default function ClothingRackHero() {
         </div>
       </div>
 
-      {/* Below the Rack: Crossfading Text Line + Pill CTA Button */}
-      <div className="rack-fade-up rack-fade-delay-2 mt-6 sm:mt-7 flex flex-col items-center gap-3.5">
-        {/* 15px font-weight 600 line that crossfades to hovered product's name */}
+      {/* Below the Rack: Crossfading Text Line + Luxury CTA Button */}
+      <div className="rack-fade-up rack-fade-delay-2 mt-8 sm:mt-10 flex flex-col items-center gap-5">
+        {/* Crossfading product name label */}
         <div
           aria-live="polite"
-          className="relative h-[22px] min-w-[200px] text-center text-[15px] font-semibold leading-[22px] text-neutral-900"
+          className="relative h-6 min-w-[240px] text-center"
         >
           <span
-            className="absolute inset-0 flex items-center justify-center transition-all duration-200"
+            className="absolute inset-0 flex items-center justify-center text-[11px] font-medium uppercase tracking-[0.28em] text-[#20242B]/55 transition-all duration-300"
             style={{
               opacity: hoveredIndex === null ? 1 : 0,
               transform:
                 hoveredIndex === null
                   ? "translateY(0px)"
-                  : "translateY(-4px)",
+                  : "translateY(-6px)",
             }}
           >
             {CONTENT.cta.label}
           </span>
           <span
-            className="absolute inset-0 flex items-center justify-center transition-all duration-200"
+            className="absolute inset-0 flex items-center justify-center text-[11px] font-semibold uppercase tracking-[0.28em] text-[#0B1F3A] transition-all duration-300"
             style={{
               opacity: hoveredIndex !== null ? 1 : 0,
               transform:
                 hoveredIndex !== null
                   ? "translateY(0px)"
-                  : "translateY(4px)",
+                  : "translateY(6px)",
             }}
           >
             {hoveredIndex !== null ? items[hoveredIndex]?.name : ""}
           </span>
         </div>
 
-        {/* Cream Pill Button — turns black and lifts 1px on hover */}
+        {/* Luxury CTA Button */}
         <Link
           href={CONTENT.cta.href}
-          className="inline-flex items-center justify-center rounded-full border border-neutral-950/15 bg-[#faf6ec] px-7 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-neutral-950 shadow-[0_2px_8px_rgba(24,20,14,0.06)] transition-all duration-200 hover:-translate-y-[1px] hover:border-black hover:bg-black hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-950"
+          className="group inline-flex items-center justify-center gap-3 border border-[#0B1F3A]/20 bg-transparent px-10 py-3.5 text-[10px] font-semibold uppercase tracking-[0.3em] text-[#0B1F3A] transition-all duration-350 hover:bg-[#0B1F3A] hover:text-[#C6A76A] hover:border-[#0B1F3A] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C6A76A]"
         >
-          {CONTENT.cta.label}
+          <span>Discover Collection</span>
+          <span className="transition-transform duration-350 group-hover:translate-x-1">→</span>
         </Link>
       </div>
 

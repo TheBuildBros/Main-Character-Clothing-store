@@ -403,10 +403,10 @@ export default function ProductPopup({
         type="button"
         onClick={triggerClose}
         aria-label="Close product preview"
-        className="fixed top-5 right-5 sm:top-8 sm:right-8 z-20 inline-flex items-center gap-2 rounded-full border border-neutral-900/15 bg-white/85 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-neutral-900 shadow-xs transition-all hover:bg-neutral-900 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900"
+        className="fixed top-5 right-5 sm:top-8 sm:right-8 z-20 inline-flex items-center gap-2 border border-[#0B1F3A]/20 bg-[#F8F6F1]/90 backdrop-blur-md px-5 py-2 text-[10px] font-semibold uppercase tracking-[0.25em] text-[#0B1F3A] shadow-sm transition-all duration-300 hover:bg-[#0B1F3A] hover:text-[#C6A76A] hover:border-[#0B1F3A] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C6A76A]"
       >
         <span>Close</span>
-        <span aria-hidden="true" className="text-sm leading-none">
+        <span aria-hidden="true" className="text-xs leading-none">
           ✕
         </span>
       </button>
@@ -446,7 +446,7 @@ export default function ProductPopup({
                     alt={`${item.name} — front view`}
                     draggable={false}
                     onError={() => setFrontFailed(true)}
-                    className="h-full w-full object-contain pointer-events-none select-none"
+                    className="h-full w-full object-contain pointer-events-none select-none drop-shadow-md"
                   />
                 ) : (
                   <GarmentPlaceholderSvg
@@ -465,7 +465,7 @@ export default function ProductPopup({
                     alt={`${item.name} — back view`}
                     draggable={false}
                     onError={() => setBackFailed(true)}
-                    className="h-full w-full object-contain pointer-events-none select-none"
+                    className="h-full w-full object-contain pointer-events-none select-none drop-shadow-md"
                   />
                 ) : (
                   <GarmentPlaceholderSvg
@@ -477,8 +477,8 @@ export default function ProductPopup({
             </div>
           </div>
 
-          <p className="mt-3 text-[11px] font-medium uppercase tracking-[0.18em] text-neutral-400 select-none">
-            Drag to rotate
+          <p className="mt-3 text-[10px] font-medium uppercase tracking-[0.28em] text-[#20242B]/40 select-none">
+            Drag to inspect silhouette
           </p>
         </div>
 
@@ -488,20 +488,30 @@ export default function ProductPopup({
             isClosing ? "rack-popup-panel-closing" : ""
           }`}
         >
-          {/* Counter */}
-          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-400 tabular-nums">
-            {formattedIndex} / {formattedTotal}
+          {/* Eyebrow & Counter */}
+          <div className="flex items-center justify-between border-b border-[#20242B]/10 pb-3">
+            <span className="text-[9px] font-semibold uppercase tracking-[0.35em] text-[#C6A76A]">
+              Protagonist Capsule
+            </span>
+            <span className="text-[10px] font-mono tracking-widest text-[#20242B]/40">
+              {formattedIndex} / {formattedTotal}
+            </span>
           </div>
 
           {/* Product Name & Price */}
           <div className="space-y-2">
             <h2
               id="rack-popup-title"
-              className="text-3xl sm:text-4xl font-extrabold uppercase tracking-[-0.03em] text-neutral-950 leading-none"
+              className="text-3xl sm:text-4xl text-[#0B1F3A] leading-tight"
+              style={{
+                fontFamily: "'Cormorant Garamond', Georgia, serif",
+                fontWeight: 600,
+                fontStyle: "italic",
+              }}
             >
               {item.name}
             </h2>
-            <p className="text-lg font-semibold text-neutral-700 tabular-nums">
+            <p className="text-xl font-semibold text-[#0B1F3A] tracking-wide">
               {item.price}
             </p>
           </div>
@@ -510,51 +520,56 @@ export default function ProductPopup({
           <div
             role="tablist"
             aria-label="Garment angle"
-            className="flex items-center gap-6 border-b border-neutral-900/10"
+            className="flex items-center gap-6 border-b border-[#20242B]/10"
           >
             <button
               type="button"
               role="tab"
               aria-selected={activeSide === "front"}
               onClick={() => handleSelectSide("front")}
-              className={`relative pb-2.5 text-xs font-semibold uppercase tracking-[0.18em] transition-colors ${
+              className={`relative pb-2.5 text-[10px] font-semibold uppercase tracking-[0.25em] transition-colors duration-200 ${
                 activeSide === "front"
-                  ? "text-neutral-950"
-                  : "text-neutral-400 hover:text-neutral-700"
+                  ? "text-[#0B1F3A]"
+                  : "text-[#20242B]/40 hover:text-[#0B1F3A]"
               }`}
             >
-              Front
+              Front Angle
               {activeSide === "front" && (
-                <span className="absolute right-0 bottom-0 left-0 h-[2px] bg-neutral-950" />
+                <span className="absolute right-0 bottom-0 left-0 h-[2px] bg-[#C6A76A]" />
               )}
             </button>
 
-            <span aria-hidden="true" className="mb-2.5 h-3 w-px bg-neutral-900/15" />
+            <span aria-hidden="true" className="mb-2.5 h-3 w-px bg-[#20242B]/15" />
 
             <button
               type="button"
               role="tab"
               aria-selected={activeSide === "back"}
               onClick={() => handleSelectSide("back")}
-              className={`relative pb-2.5 text-xs font-semibold uppercase tracking-[0.18em] transition-colors ${
+              className={`relative pb-2.5 text-[10px] font-semibold uppercase tracking-[0.25em] transition-colors duration-200 ${
                 activeSide === "back"
-                  ? "text-neutral-950"
-                  : "text-neutral-400 hover:text-neutral-700"
+                  ? "text-[#0B1F3A]"
+                  : "text-[#20242B]/40 hover:text-[#0B1F3A]"
               }`}
             >
-              Back
+              Back Angle
               {activeSide === "back" && (
-                <span className="absolute right-0 bottom-0 left-0 h-[2px] bg-neutral-950" />
+                <span className="absolute right-0 bottom-0 left-0 h-[2px] bg-[#C6A76A]" />
               )}
             </button>
           </div>
 
           {/* Size Pills */}
           <div className="space-y-2.5">
-            <span className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500">
-              Size
-            </span>
-            <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex items-center justify-between">
+              <span className="block text-[10px] font-semibold uppercase tracking-[0.25em] text-[#20242B]/60">
+                Select Size
+              </span>
+              <span className="text-[9px] uppercase tracking-wider text-[#C6A76A]">
+                Tailored Fit
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
               {sizes.map((size) => {
                 const isSelected = selectedSize === size;
                 return (
@@ -566,10 +581,10 @@ export default function ProductPopup({
                       setSelectedSize(size);
                       setAddedToCart(false);
                     }}
-                    className={`min-w-[46px] rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-all ${
+                    className={`min-w-[48px] border px-4 py-2 text-xs font-semibold uppercase tracking-wider transition-all duration-200 ${
                       isSelected
-                        ? "border-neutral-950 bg-neutral-950 text-white"
-                        : "border-neutral-900/15 bg-white text-neutral-800 hover:border-neutral-900/50"
+                        ? "border-[#0B1F3A] bg-[#0B1F3A] text-[#C6A76A]"
+                        : "border-[#20242B]/15 bg-white text-[#20242B]/80 hover:border-[#0B1F3A]"
                     }`}
                   >
                     {size}
@@ -579,23 +594,25 @@ export default function ProductPopup({
             </div>
           </div>
 
-          {/* Full-width Black Add to Cart Button */}
+          {/* Full-width Luxury Add to Cart Button */}
           <button
             type="button"
             onClick={handleAddToCart}
-            className="w-full rounded-full bg-black py-4 text-xs font-semibold uppercase tracking-[0.2em] text-white transition-all hover:bg-neutral-800 active:scale-[0.99]"
+            className="w-full bg-[#0B1F3A] py-4 text-[10px] font-semibold uppercase tracking-[0.3em] text-[#C6A76A] border border-[#0B1F3A] hover:bg-[#C6A76A] hover:text-[#0B1F3A] transition-all duration-300 shadow-sm"
           >
-            {addedToCart ? "Added ✓" : "Add to cart"}
+            {addedToCart ? "Added to Shopping Bag ✓" : "Add to Shopping Bag"}
           </button>
 
           {/* Footer Row */}
-          <div className="flex items-center justify-between border-t border-neutral-900/10 pt-4 text-xs">
-            <span className="font-semibold text-neutral-500">{item.name}</span>
+          <div className="flex items-center justify-between border-t border-[#20242B]/10 pt-4 text-xs">
+            <span className="text-[10px] uppercase tracking-widest text-[#20242B]/50 font-medium">
+              Bespoke Edition
+            </span>
             <Link
               href={item.url}
-              className="font-semibold text-neutral-950 underline underline-offset-4 transition-opacity hover:opacity-65"
+              className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#0B1F3A] hover:text-[#C6A76A] underline underline-offset-4 transition-colors"
             >
-              View product page
+              Full Editorial Specimen →
             </Link>
           </div>
         </div>
