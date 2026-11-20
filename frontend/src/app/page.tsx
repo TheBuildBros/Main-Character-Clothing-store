@@ -4,10 +4,10 @@ import StickyScrollReveal from "@/components/newarrivals/StickyScrollReveal";
 
 export default function LandingPage() {
   return (
-    <main>
+    <>
       <HeroSection />
       <ClothingRackHero />
       <StickyScrollReveal />
-    </main>
+    </>
   );
 }
