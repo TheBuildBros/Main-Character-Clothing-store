@@ -28,6 +28,7 @@ import {
   CATEGORY_EDITORIAL_MAP,
 } from "@/data/products";
 import QuickViewModal from "@/components/collections/QuickViewModal";
+import { formatPrice } from "@/components/commerce/formatters";
 import { useCartStore } from "@/store/cart";
 import { useWishlistStore } from "@/store/wishlist";
 import { useIsMounted } from "@/lib/useIsMounted";
@@ -753,10 +754,10 @@ function CollectionsClientContent() {
 
                     {/* Clean Price */}
                     <div className="pt-0.5 flex items-baseline gap-2 text-sm font-sans text-[#0B1F3A]">
-                      <span>${product.price}</span>
+                      <span className="tabular-nums">{formatPrice(product.price)}</span>
                       {product.originalPrice && (
-                        <span className="text-xs text-[#20242B]/40 line-through">
-                          ${product.originalPrice}
+                        <span className="text-xs text-[#20242B]/40 line-through tabular-nums">
+                          {formatPrice(product.originalPrice)}
                         </span>
                       )}
                     </div>
@@ -1064,7 +1065,9 @@ function CollectionsClientContent() {
               <div className="space-y-3 pt-4 border-t border-[#20242B]/10">
                 <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.22em] text-[#0B1F3A] font-semibold">
                   <span>Price Range</span>
-                  <span className="font-mono text-xs">${priceMin} — ${priceMax}</span>
+                  <span className="font-mono text-xs tabular-nums">
+                    {formatPrice(priceMin)} — {formatPrice(priceMax)}
+                  </span>
                 </div>
                 <input
                   type="range"

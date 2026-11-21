@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Home,
   MapPin,
   ShoppingBag,
   User,
@@ -56,7 +57,6 @@ export default function Header() {
 
   const navLinks = [
     { href: "/collections", label: "Collections" },
-    { href: "/location", label: "Flagship" },
   ];
 
   return (
@@ -76,11 +76,24 @@ export default function Header() {
             {/* Mobile Menu Button */}
             <button
               type="button"
-              onClick={() => setMobileMenuOpen(true)}
-              aria-label="Open navigation menu"
-              className="flex h-11 w-11 items-center justify-center rounded-sm text-[#C6A76A] transition-all duration-200 hover:text-[#e0c487] hover:bg-white/5 md:hidden"
+              onClick={() => setMobileMenuOpen((prev) => !prev)}
+              aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-navigation-drawer"
+              className="relative flex h-11 w-11 items-center justify-center rounded-sm text-[#C6A76A] transition-all duration-200 hover:text-[#e0c487] hover:bg-white/5 md:hidden"
             >
-              <Menu className="h-5 w-5" strokeWidth={1.5} />
+              <Menu
+                className={`h-5 w-5 transition-all duration-300 ease-in-out ${
+                  mobileMenuOpen ? "opacity-0 rotate-90 scale-75" : "opacity-100 rotate-0 scale-100"
+                }`}
+                strokeWidth={1.5}
+              />
+              <X
+                className={`absolute h-5 w-5 transition-all duration-300 ease-in-out ${
+                  mobileMenuOpen ? "opacity-100 rotate-0 scale-100" : "opacity-0 -rotate-90 scale-75"
+                }`}
+                strokeWidth={1.5}
+              />
             </button>
 
             {/* Desktop Navigation */}
@@ -89,7 +102,7 @@ export default function Header() {
                 <Link
                   key={href}
                   href={href}
-                  className={`relative py-1 text-[10px] uppercase tracking-[0.26em] font-medium transition-all duration-300 group ${
+                  className={`relative py-1 text-[13px] uppercase tracking-[0.26em] font-medium transition-all duration-300 group ${
                     isActive(href)
                       ? "text-[#C6A76A]"
                       : "text-[#F5F2EA]/80 hover:text-[#C6A76A]"
@@ -131,7 +144,19 @@ export default function Header() {
           </div>
 
           {/* ── Right Zone: Action Icons ── */}
-          <div className="flex w-1/4 items-center justify-end gap-0.5 sm:gap-1 text-[#C6A76A]">
+          <div className="flex w-1/4 items-center justify-end gap-3 sm:gap-1 text-[#C6A76A]">
+
+            {/* Home */}
+            <Link
+              href="/"
+              aria-label="Home"
+              title="Home"
+              className={`flex h-11 w-11 sm:h-10 sm:w-10 items-center justify-center rounded-sm transition-all duration-200 hover:text-[#e0c487] hover:bg-white/5 ${
+                isActive("/") ? "text-[#e0c487] bg-white/5" : ""
+              }`}
+            >
+              <Home className="h-4 w-4" strokeWidth={1.5} />
+            </Link>
 
             {/* Store Location (desktop only) */}
             <Link
@@ -202,111 +227,137 @@ export default function Header() {
       </header>
 
       {/* ── Mobile Navigation Drawer ── */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 z-[60] flex md:hidden">
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setMobileMenuOpen(false)}
-            aria-hidden="true"
-          />
+      <div
+        id="mobile-navigation-drawer"
+        aria-hidden={!mobileMenuOpen}
+        inert={!mobileMenuOpen}
+        className={`fixed inset-0 z-[60] flex overflow-hidden md:hidden transition-all duration-300 ease-in-out ${
+          mobileMenuOpen
+            ? "visible opacity-100 pointer-events-auto"
+            : "invisible opacity-0 pointer-events-none"
+        }`}
+      >
+        {/* Backdrop */}
+        <div
+          className={`fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ease-in-out ${
+            mobileMenuOpen ? "opacity-100" : "opacity-0"
+          }`}
+          onClick={() => setMobileMenuOpen(false)}
+          aria-hidden="true"
+        />
 
-          {/* Drawer Panel */}
-          <div className="relative flex w-[82%] max-w-xs flex-col bg-[#091426] text-[#F5F2EA] shadow-2xl border-r border-[#C6A76A]/15 z-10 overflow-y-auto">
+        {/* Drawer Panel */}
+        <div
+          className={`relative flex w-[82%] max-w-xs flex-col bg-[#091426] text-[#F5F2EA] shadow-2xl border-r border-[#C6A76A]/15 z-10 overflow-y-auto transition-all duration-300 ease-in-out ${
+            mobileMenuOpen
+              ? "translate-x-0 opacity-100"
+              : "-translate-x-full opacity-0"
+          }`}
+        >
 
-            {/* Drawer Header */}
-            <div className="flex items-center justify-between px-6 pt-7 pb-6 border-b border-[#C6A76A]/15">
-              <div className="flex flex-col gap-0.5">
-                <span
-                  className="text-[#C6A76A] font-black tracking-[0.25em] text-xl leading-none"
-                  style={{
-                    fontFamily: "'Zen Kaku Gothic New', 'Noto Sans JP', sans-serif",
-                  }}
-                >
-                  主人公
-                </span>
-                <span className="text-[8px] text-[#F5F2EA]/30 tracking-[0.4em] uppercase">
-                  MainCharacter
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setMobileMenuOpen(false)}
-                aria-label="Close menu"
-                className="flex h-10 w-10 items-center justify-center rounded-sm text-[#C6A76A] hover:bg-white/5 transition-colors"
+          {/* Drawer Header */}
+          <div className="flex items-center justify-between px-6 pt-7 pb-6 border-b border-[#C6A76A]/15">
+            <div className="flex flex-col gap-0.5">
+              <span
+                className="text-[#C6A76A] font-black tracking-[0.25em] text-xl leading-none"
+                style={{
+                  fontFamily: "'Zen Kaku Gothic New', 'Noto Sans JP', sans-serif",
+                }}
               >
-                <X className="h-5 w-5" strokeWidth={1.5} />
-              </button>
+                主人公
+              </span>
+              <span className="text-[8px] text-[#F5F2EA]/30 tracking-[0.4em] uppercase">
+                MainCharacter
+              </span>
             </div>
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(false)}
+              aria-label="Close menu"
+              tabIndex={mobileMenuOpen ? 0 : -1}
+              className="flex h-10 w-10 items-center justify-center rounded-sm text-[#C6A76A] hover:bg-white/5 transition-colors"
+            >
+              <X className="h-5 w-5" strokeWidth={1.5} />
+            </button>
+          </div>
 
-            {/* Drawer Nav Links */}
-            <div className="flex flex-col px-6 py-7 gap-1">
-              {[
-                { href: "/collections", label: "Collections" },
-                { href: "/location", label: "Flagship Store" },
-                { href: "/wishlist", label: "Wishlist", count: isMounted ? wishlistItemCount : 0 },
-                { href: "/carts", label: "Shopping Bag", count: isMounted ? cartItemCount : 0 },
-                { href: "/account", label: isMounted && isAuthenticated ? (user?.username || "My Account") : "Account / Login" },
-              ].map(({ href, label, count }) => (
+          {/* Drawer Nav Links */}
+          <div
+            className={`flex flex-col px-6 py-7 gap-1 transition-all duration-300 ease-in-out ${
+              mobileMenuOpen
+                ? "translate-y-0 opacity-100"
+                : "-translate-y-2 opacity-0"
+            }`}
+          >
+            {[
+              { href: "/collections", label: "Collections" },
+              { href: "/location", label: "Flagship Store" },
+              { href: "/wishlist", label: "Wishlist", count: isMounted ? wishlistItemCount : 0 },
+              { href: "/carts", label: "Shopping Bag", count: isMounted ? cartItemCount : 0 },
+              { href: "/account", label: isMounted && isAuthenticated ? (user?.username || "My Account") : "Account / Login" },
+            ].map(({ href, label, count }) => (
+              <Link
+                key={href}
+                href={href}
+                tabIndex={mobileMenuOpen ? 0 : -1}
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-between py-4 text-sm uppercase tracking-[0.22em] font-medium text-[#F5F2EA]/80 hover:text-[#C6A76A] border-b border-white/[0.05] transition-colors duration-200 group"
+              >
+                <span>{label}</span>
+                <div className="flex items-center gap-2">
+                  {count !== undefined && count > 0 && (
+                    <span className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#C6A76A] text-[9px] font-bold text-[#091426] px-1.5">
+                      {count}
+                    </span>
+                  )}
+                  <ArrowRight className="h-3.5 w-3.5 text-[#C6A76A]/50 group-hover:text-[#C6A76A] transition-colors" strokeWidth={1.5} />
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          {/* Drawer Footer CTA */}
+          <div className="mt-auto px-6 pb-8 pt-6 border-t border-[#C6A76A]/15">
+            {isMounted && isAuthenticated ? (
+              <div className="space-y-3">
+                <div className="text-[9px] uppercase tracking-[0.3em] text-[#F5F2EA]/40">
+                  Signed in as
+                </div>
+                <div className="text-sm font-medium text-[#F5F2EA] truncate">
+                  {user?.email}
+                </div>
                 <Link
-                  key={href}
-                  href={href}
+                  href="/account"
+                  tabIndex={mobileMenuOpen ? 0 : -1}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-between py-4 text-sm uppercase tracking-[0.22em] font-medium text-[#F5F2EA]/80 hover:text-[#C6A76A] border-b border-white/[0.05] transition-colors duration-200 group"
+                  className="mt-2 block w-full text-center py-3 rounded-sm bg-[#C6A76A]/10 text-[#C6A76A] text-[10px] uppercase tracking-[0.25em] font-semibold border border-[#C6A76A]/30 hover:bg-[#C6A76A] hover:text-[#091426] transition-all duration-250"
                 >
-                  <span>{label}</span>
-                  <div className="flex items-center gap-2">
-                    {count !== undefined && count > 0 && (
-                      <span className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#C6A76A] text-[9px] font-bold text-[#091426] px-1.5">
-                        {count}
-                      </span>
-                    )}
-                    <ArrowRight className="h-3.5 w-3.5 text-[#C6A76A]/50 group-hover:text-[#C6A76A] transition-colors" strokeWidth={1.5} />
-                  </div>
+                  View Account
                 </Link>
-              ))}
-            </div>
-
-            {/* Drawer Footer CTA */}
-            <div className="mt-auto px-6 pb-8 pt-6 border-t border-[#C6A76A]/15">
-              {isMounted && isAuthenticated ? (
-                <div className="space-y-3">
-                  <div className="text-[9px] uppercase tracking-[0.3em] text-[#F5F2EA]/40">
-                    Signed in as
-                  </div>
-                  <div className="text-sm font-medium text-[#F5F2EA] truncate">
-                    {user?.email}
-                  </div>
-                  <Link
-                    href="/account"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="mt-2 block w-full text-center py-3 rounded-sm bg-[#C6A76A]/10 text-[#C6A76A] text-[10px] uppercase tracking-[0.25em] font-semibold border border-[#C6A76A]/30 hover:bg-[#C6A76A] hover:text-[#091426] transition-all duration-250"
-                  >
-                    View Account
-                  </Link>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-3">
-                  <Link
-                    href="/login"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block text-center py-3 rounded-sm bg-transparent text-[#C6A76A] text-[10px] uppercase tracking-[0.2em] font-semibold border border-[#C6A76A]/35 hover:bg-[#C6A76A]/10 transition-colors duration-200"
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    href="/signup"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block text-center py-3 rounded-sm bg-[#C6A76A] text-[#091426] text-[10px] uppercase tracking-[0.2em] font-semibold hover:bg-[#e0c487] transition-colors duration-200"
-                  >
-                    Join
-                  </Link>
-                </div>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <Link
+                  href="/login"
+                  tabIndex={mobileMenuOpen ? 0 : -1}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block text-center py-3 rounded-sm bg-transparent text-[#C6A76A] text-[10px] uppercase tracking-[0.2em] font-semibold border border-[#C6A76A]/35 hover:bg-[#C6A76A]/10 transition-colors duration-200"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/signup"
+                  tabIndex={mobileMenuOpen ? 0 : -1}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block text-center py-3 rounded-sm bg-[#C6A76A] text-[#091426] text-[10px] uppercase tracking-[0.2em] font-semibold hover:bg-[#e0c487] transition-colors duration-200"
+                >
+                  Join
+                </Link>
+              </div>
+            )}
           </div>
         </div>
-      )}
+      </div>
     </>
   );
 }

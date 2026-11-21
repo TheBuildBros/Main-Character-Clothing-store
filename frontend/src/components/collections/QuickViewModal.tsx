@@ -7,6 +7,10 @@ import { X, Heart, ShoppingBag, Check, ShieldCheck, Truck, ArrowRight, Minus, Pl
 import type { Product, ProductSize, ColorSwatch } from "@/data/products";
 import { useCartStore } from "@/store/cart";
 import { useWishlistStore } from "@/store/wishlist";
+import {
+  formatPrice,
+  formatPriceParts,
+} from "@/components/commerce/formatters";
 
 interface QuickViewModalProps {
   product: Product | null;
@@ -215,14 +219,32 @@ export default function QuickViewModal({
             {/* Pricing */}
             <div className="flex items-baseline gap-3 pt-1">
               <span
-                className="text-2xl text-[#0B1F3A] font-semibold"
+                className="text-2xl text-[#0B1F3A] font-semibold tabular-nums"
                 style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
               >
-                ${product.price.toFixed(2)}
+                {(() => {
+                  const { prefix, symbol, value } = formatPriceParts(
+                    product.price
+                  );
+                  return (
+                    <>
+                      {prefix}
+                      <span
+                        style={{
+                          fontFamily:
+                            "var(--font-inter, 'Inter', system-ui, sans-serif)",
+                        }}
+                      >
+                        {symbol}
+                      </span>
+                      {value}
+                    </>
+                  );
+                })()}
               </span>
               {product.originalPrice && (
-                <span className="text-sm text-[#20242B]/40 line-through">
-                  ${product.originalPrice.toFixed(2)}
+                <span className="text-sm text-[#20242B]/40 line-through tabular-nums">
+                  {formatPrice(product.originalPrice)}
                 </span>
               )}
               {product.discount && (

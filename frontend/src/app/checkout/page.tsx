@@ -1,378 +1,499 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
-import {
-  ShieldCheck,
-  CreditCard,
-  MapPin,
-  ArrowLeft,
-  Lock,
-  Truck,
-} from "lucide-react";
 import { useAuthStore } from "@/store/auth";
 import { useCartStore } from "@/store/cart";
+import { useIsMounted } from "@/lib/useIsMounted";
+import type { CartItem } from "@/types";
+import {
+  calculatePricing,
+  findCatalogProduct,
+  formatPrice,
+  formatPriceParts,
+  isProductOutOfStock,
+  type OrderPricing,
+} from "@/components/commerce/formatters";
+import { StepIndicator } from "@/components/commerce/StepIndicator";
+import { PriceDetails } from "@/components/commerce/PriceDetails";
+import { EmptyState } from "@/components/commerce/EmptyState";
+import { Toast, type ToastData } from "@/components/commerce/Toast";
+import { CheckoutPageSkeleton } from "@/components/commerce/Skeletons";
+import { AccordionStep } from "@/components/checkout/AccordionStep";
+import { AddressStep } from "@/components/checkout/AddressStep";
+import { OrderSummaryStep } from "@/components/checkout/OrderSummaryStep";
+import { PaymentStep } from "@/components/checkout/PaymentStep";
+import { OrderSuccessView } from "@/components/checkout/OrderSuccessView";
+import {
+  validateCardForm,
+  validateUpiId,
+  type CardFormState,
+  type PaymentMethodId,
+  type SavedCheckoutAddress,
+} from "@/components/checkout/types";
+
+const ADDRESSES_STORAGE_KEY = "maincharacter-checkout-addresses";
+
+interface CompletedOrderSnapshot {
+  orderId: string;
+  address: SavedCheckoutAddress;
+  paymentMethod: PaymentMethodId;
+  items: CartItem[];
+  pricing: OrderPricing;
+}
 
 export default function CheckoutPage() {
-  const [isMounted, setIsMounted] = useState(false);
+  const isMounted = useIsMounted();
+
   const user = useAuthStore((s) => s.user);
   const savedAddress = useAuthStore((s) => s.savedAddress);
+  const updateAuthAddress = useAuthStore((s) => s.updateAddress);
+
   const items = useCartStore((s) => s.items);
-  const totalItemCount = items.reduce((total, item) => total + item.quantity, 0);
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0) || 195;
+  const clearCart = useCartStore((s) => s.clearCart);
 
-  const [useDifferentAddress, setUseDifferentAddress] = useState(false);
-  const [checkoutAddress, setCheckoutAddress] = useState({
-    fullName: "",
-    phoneNumber: "",
-    houseNumber: "",
-    streetName: "",
-    areaLocality: "",
-    city: "",
-    state: "",
-    pinCode: "",
-  });
+  // Accordion state: 1 = Delivery Address, 2 = Order Summary, 3 = Payment Options
+  const [activeStep, setActiveStep] = useState<1 | 2 | 3>(1);
+  const [addressConfirmed, setAddressConfirmed] = useState(false);
+  const [summaryConfirmed, setSummaryConfirmed] = useState(false);
 
-  const [selectedPayment, setSelectedPayment] = useState("card");
-
-  useEffect(() => {
-    setIsMounted(true);
-    if (savedAddress) {
-      setCheckoutAddress(savedAddress);
-    } else if (user) {
-      setCheckoutAddress((prev) => ({
-        ...prev,
-        fullName: user.username,
-        phoneNumber: user.phone,
-      }));
+  // Saved addresses list (lazy-loaded from localStorage, merged with useAuthStore.savedAddress)
+  const [storedAddresses, setStoredAddresses] = useState<
+    SavedCheckoutAddress[]
+  >(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = window.localStorage.getItem(ADDRESSES_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as unknown;
+        if (Array.isArray(parsed)) {
+          return parsed as SavedCheckoutAddress[];
+        }
+      }
+    } catch {
+      return [];
     }
-  }, [savedAddress, user]);
+    return [];
+  });
+  const [manualSelectedAddressId, setManualSelectedAddressId] = useState<
+    string | null
+  >(null);
 
-  if (!isMounted) return null;
+  // Payment state (UI-only — not wired to a live payment gateway)
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodId>("card");
+  const [cardDetails, setCardDetails] = useState<CardFormState>({
+    cardNumber: "",
+    expiry: "",
+    cvv: "",
+    nameOnCard: "",
+  });
+  const [upiId, setUpiId] = useState("");
 
-  const shipping = subtotal >= 200 ? 0 : 15;
-  const tax = subtotal * 0.08;
-  const total = subtotal + shipping + tax;
+  const [completedOrder, setCompletedOrder] =
+    useState<CompletedOrderSnapshot | null>(null);
+  const [toast, setToast] = useState<ToastData | null>(null);
+
+  const addresses = useMemo(() => {
+    if (savedAddress && savedAddress.fullName && savedAddress.pinCode) {
+      const exists = storedAddresses.some(
+        (a) =>
+          a.fullName === savedAddress.fullName &&
+          a.pinCode === savedAddress.pinCode &&
+          a.houseNumber === savedAddress.houseNumber
+      );
+      if (!exists) {
+        return [
+          {
+            ...savedAddress,
+            id: "auth-saved-address",
+            addressType: "Home" as const,
+          },
+          ...storedAddresses,
+        ];
+      }
+    }
+    return storedAddresses;
+  }, [savedAddress, storedAddresses]);
+
+  const selectedAddressId = useMemo(() => {
+    if (
+      manualSelectedAddressId &&
+      addresses.some((a) => a.id === manualSelectedAddressId)
+    ) {
+      return manualSelectedAddressId;
+    }
+    return addresses[0]?.id ?? null;
+  }, [addresses, manualSelectedAddressId]);
+
+  const pricing = useMemo(() => calculatePricing(items), [items]);
+
+  const hasOutOfStockItem = useMemo(
+    () =>
+      items.some((item) =>
+        isProductOutOfStock(findCatalogProduct(item)?.availability)
+      ),
+    [items]
+  );
+
+  const selectedAddress = useMemo(
+    () => addresses.find((a) => a.id === selectedAddressId) ?? null,
+    [addresses, selectedAddressId]
+  );
+
+  const isPaymentValid = useMemo(() => {
+    if (paymentMethod === "cod") return true;
+    if (paymentMethod === "upi") return !validateUpiId(upiId);
+    return Object.keys(validateCardForm(cardDetails)).length === 0;
+  }, [paymentMethod, upiId, cardDetails]);
+
+  const canPlaceOrder =
+    items.length > 0 &&
+    !hasOutOfStockItem &&
+    addressConfirmed &&
+    Boolean(selectedAddress) &&
+    summaryConfirmed &&
+    isPaymentValid;
+
+  const persistAddresses = useCallback((next: SavedCheckoutAddress[]) => {
+    setStoredAddresses(next);
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem(
+          ADDRESSES_STORAGE_KEY,
+          JSON.stringify(next)
+        );
+      } catch {
+        // Ignore storage quota errors
+      }
+    }
+  }, []);
+
+  const handleSaveAddress = useCallback(
+    (address: SavedCheckoutAddress, isEdit: boolean) => {
+      const next = isEdit
+        ? addresses.map((a) => (a.id === address.id ? address : a))
+        : [address, ...addresses];
+      persistAddresses(next);
+      setManualSelectedAddressId(address.id);
+      updateAuthAddress({
+        fullName: address.fullName,
+        phoneNumber: address.phoneNumber,
+        houseNumber: address.houseNumber,
+        streetName: address.streetName,
+        areaLocality: address.areaLocality,
+        city: address.city,
+        state: address.state,
+        pinCode: address.pinCode,
+        isDefault: true,
+      });
+      setToast({
+        id: Date.now(),
+        message: isEdit ? "Delivery address updated" : "Delivery address saved",
+        durationMs: 3000,
+      });
+    },
+    [addresses, persistAddresses, updateAuthAddress]
+  );
+
+  const handleConfirmAddress = useCallback(
+    (address: SavedCheckoutAddress) => {
+      setManualSelectedAddressId(address.id);
+      setAddressConfirmed(true);
+      updateAuthAddress({
+        fullName: address.fullName,
+        phoneNumber: address.phoneNumber,
+        houseNumber: address.houseNumber,
+        streetName: address.streetName,
+        areaLocality: address.areaLocality,
+        city: address.city,
+        state: address.state,
+        pinCode: address.pinCode,
+        isDefault: true,
+      });
+      setActiveStep(2);
+    },
+    [updateAuthAddress]
+  );
+
+  const handleConfirmSummary = useCallback(() => {
+    if (hasOutOfStockItem || items.length === 0) return;
+    setSummaryConfirmed(true);
+    setActiveStep(3);
+  }, [hasOutOfStockItem, items.length]);
+
+  const handlePlaceOrder = useCallback(() => {
+    if (!canPlaceOrder || !selectedAddress) return;
+    const orderId = `MC-${new Date().getFullYear()}-${Math.floor(
+      100000 + Math.random() * 900000
+    )}`;
+    setCompletedOrder({
+      orderId,
+      address: selectedAddress,
+      paymentMethod,
+      items: [...items],
+      pricing,
+    });
+    clearCart();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [canPlaceOrder, clearCart, items, paymentMethod, pricing, selectedAddress]);
+
+  const disabledReason = useMemo(() => {
+    if (hasOutOfStockItem) return "Resolve out-of-stock items in your bag.";
+    if (!addressConfirmed) return "Select and confirm a delivery address.";
+    if (!summaryConfirmed) return "Review and confirm your order summary.";
+    if (!isPaymentValid) return "Complete valid payment details to continue.";
+    return undefined;
+  }, [addressConfirmed, hasOutOfStockItem, isPaymentValid, summaryConfirmed]);
+
+  if (!isMounted) {
+    return <CheckoutPageSkeleton />;
+  }
 
   return (
-    <main className="min-h-screen bg-[#F8F6F1] text-[#20242B] pb-24">
+    <div className="min-h-screen bg-[#F8F6F1] text-[#20242B] pb-28 lg:pb-16">
       {/* Header */}
-      <section className="bg-[#0B1F3A] text-[#F8F6F1] py-8 sm:py-10 px-5 sm:px-8 border-b border-[#C6A76A]/15">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <Link
-            href="/carts"
-            className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] font-semibold text-[#C6A76A] hover:text-[#e0c487] transition-colors"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.5} />
-            <span>Return to Bag</span>
-          </Link>
-          <div className="flex items-center gap-2 text-[10px] text-[#F8F6F1]/60 uppercase tracking-widest font-mono">
-            <Lock className="h-3.5 w-3.5 text-[#C6A76A]" strokeWidth={1.5} />
-            <span>Encrypted Checkout Protocol</span>
-          </div>
-        </div>
-      </section>
-
-      <div className="max-w-5xl mx-auto px-5 sm:px-8 py-10 space-y-8">
-        <div>
-          <span className="text-[9px] uppercase tracking-[0.35em] font-medium text-[#C6A76A] block mb-1">
-            Express Order
-          </span>
-          <h1
-            className="text-3xl sm:text-4xl text-[#0B1F3A]"
-            style={{
-              fontFamily: "'Cormorant Garamond', Georgia, serif",
-              fontWeight: 600,
-              fontStyle: "italic",
-            }}
-          >
-            Order Finalization
-          </h1>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Left Column: Delivery & Payment Details (7 cols) */}
-          <div className="lg:col-span-7 space-y-6">
-            {/* Step 1: Delivery Address */}
-            <div className="bg-white border border-[#20242B]/[0.08] p-6 sm:p-8 shadow-[0_2px_16px_rgba(11,31,58,0.04)] space-y-5">
-              <div className="flex items-center justify-between border-b border-[#20242B]/[0.08] pb-3">
-                <h2
-                  className="text-lg text-[#0B1F3A] flex items-center gap-2"
-                  style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600 }}
-                >
-                  <MapPin className="h-4 w-4 text-[#C6A76A]" strokeWidth={1.5} />
-                  <span>1. Delivery Destination</span>
-                </h2>
-                {savedAddress && (
-                  <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[#C6A76A] bg-[#0B1F3A]/5 px-2.5 py-0.5">
-                    Saved Profile Address
-                  </span>
-                )}
-              </div>
-
-              {savedAddress && !useDifferentAddress ? (
-                <div className="p-5 bg-[#F8F6F1] border border-[#20242B]/[0.08] space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="font-semibold text-sm text-[#0B1F3A]">
-                      {savedAddress.fullName}
-                    </span>
-                    <span className="text-xs text-[#20242B]/60 font-light">
-                      {savedAddress.phoneNumber}
-                    </span>
-                  </div>
-                  <p className="text-xs text-[#20242B]/80 leading-relaxed font-light">
-                    {savedAddress.houseNumber}, {savedAddress.streetName}, {savedAddress.areaLocality}
-                    <br />
-                    {savedAddress.city}, {savedAddress.state} — {savedAddress.pinCode}
-                  </p>
-                  <div className="pt-2">
-                    <button
-                      type="button"
-                      onClick={() => setUseDifferentAddress(true)}
-                      className="text-[10px] uppercase tracking-wider font-semibold text-[#C6A76A] hover:underline"
-                    >
-                      Ship to alternative address for this order →
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {savedAddress && (
-                    <button
-                      type="button"
-                      onClick={() => setUseDifferentAddress(false)}
-                      className="text-[10px] uppercase tracking-wider font-semibold text-[#C6A76A] hover:underline block"
-                    >
-                      ← Revert to saved default address
-                    </button>
-                  )}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                    <input
-                      type="text"
-                      placeholder="Recipient Full Name"
-                      value={checkoutAddress.fullName}
-                      onChange={(e) =>
-                        setCheckoutAddress({
-                          ...checkoutAddress,
-                          fullName: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2.5 border border-[#20242B]/15 bg-[#F8F6F1]/50 text-xs text-[#20242B] focus:outline-none focus:border-[#C6A76A]"
-                    />
-                    <input
-                      type="tel"
-                      placeholder="Phone Number"
-                      value={checkoutAddress.phoneNumber}
-                      onChange={(e) =>
-                        setCheckoutAddress({
-                          ...checkoutAddress,
-                          phoneNumber: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2.5 border border-[#20242B]/15 bg-[#F8F6F1]/50 text-xs text-[#20242B] focus:outline-none focus:border-[#C6A76A]"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Building / Suite"
-                      value={checkoutAddress.houseNumber}
-                      onChange={(e) =>
-                        setCheckoutAddress({
-                          ...checkoutAddress,
-                          houseNumber: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2.5 border border-[#20242B]/15 bg-[#F8F6F1]/50 text-xs text-[#20242B] focus:outline-none focus:border-[#C6A76A]"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Street Name"
-                      value={checkoutAddress.streetName}
-                      onChange={(e) =>
-                        setCheckoutAddress({
-                          ...checkoutAddress,
-                          streetName: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2.5 border border-[#20242B]/15 bg-[#F8F6F1]/50 text-xs text-[#20242B] focus:outline-none focus:border-[#C6A76A]"
-                    />
-                    <input
-                      type="text"
-                      placeholder="City"
-                      value={checkoutAddress.city}
-                      onChange={(e) =>
-                        setCheckoutAddress({
-                          ...checkoutAddress,
-                          city: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2.5 border border-[#20242B]/15 bg-[#F8F6F1]/50 text-xs text-[#20242B] focus:outline-none focus:border-[#C6A76A]"
-                    />
-                    <input
-                      type="text"
-                      placeholder="State / Prefecture"
-                      value={checkoutAddress.state}
-                      onChange={(e) =>
-                        setCheckoutAddress({
-                          ...checkoutAddress,
-                          state: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2.5 border border-[#20242B]/15 bg-[#F8F6F1]/50 text-xs text-[#20242B] focus:outline-none focus:border-[#C6A76A]"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Postal / PIN Code"
-                      value={checkoutAddress.pinCode}
-                      onChange={(e) =>
-                        setCheckoutAddress({
-                          ...checkoutAddress,
-                          pinCode: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2.5 border border-[#20242B]/15 bg-[#F8F6F1]/50 text-xs text-[#20242B] focus:outline-none focus:border-[#C6A76A] sm:col-span-2"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Step 2: Payment Method */}
-            <div className="bg-white border border-[#20242B]/[0.08] p-6 sm:p-8 shadow-[0_2px_16px_rgba(11,31,58,0.04)] space-y-4">
-              <div className="border-b border-[#20242B]/[0.08] pb-3">
-                <h2
-                  className="text-lg text-[#0B1F3A] flex items-center gap-2"
-                  style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600 }}
-                >
-                  <CreditCard className="h-4 w-4 text-[#C6A76A]" strokeWidth={1.5} />
-                  <span>2. Payment Method</span>
-                </h2>
-              </div>
-
-              <div className="space-y-2.5">
-                {[
-                  { id: "card", label: "Credit / Debit Card (Stripe Global)", sub: "Visa, Mastercard, Amex" },
-                  { id: "upi", label: "Instant Net Banking / UPI", sub: "Razorpay Secure Protocol" },
-                  { id: "cod", label: "Concierge Cash on Delivery", sub: "Protagonist Vault Inspection" },
-                ].map((opt) => (
-                  <label
-                    key={opt.id}
-                    className={`flex items-center justify-between p-4 border cursor-pointer transition-all duration-200 ${
-                      selectedPayment === opt.id
-                        ? "border-[#C6A76A] bg-[#C6A76A]/5"
-                        : "border-[#20242B]/15 hover:border-[#20242B]/30"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="radio"
-                        name="payment"
-                        value={opt.id}
-                        checked={selectedPayment === opt.id}
-                        onChange={() => setSelectedPayment(opt.id)}
-                        className="accent-[#C6A76A]"
-                      />
-                      <div>
-                        <span className="text-xs font-semibold text-[#0B1F3A] block">
-                          {opt.label}
-                        </span>
-                        <span className="text-[10px] text-[#20242B]/50 font-light">
-                          {opt.sub}
-                        </span>
-                      </div>
-                    </div>
-                    <span className="text-[9px] uppercase font-mono tracking-wider text-[#C6A76A]">
-                      Encrypted
-                    </span>
-                  </label>
-                ))}
-              </div>
-
-              <div className="p-3.5 border border-[#C6A76A]/25 bg-[#C6A76A]/5 flex items-start gap-2.5">
-                <ShieldCheck className="h-4 w-4 text-[#C6A76A] shrink-0 mt-0.5" strokeWidth={1.5} />
-                <p className="text-[11px] text-[#20242B]/75 leading-relaxed font-light">
-                  Demo order environment. No live financial transaction will be charged during this preview session.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column: Order Review (5 cols) */}
-          <div className="lg:col-span-5 space-y-6">
-            <div className="bg-white border border-[#20242B]/[0.08] p-6 sm:p-8 shadow-[0_2px_16px_rgba(11,31,58,0.04)] space-y-6">
-              <div className="border-b border-[#20242B]/[0.08] pb-3">
-                <span className="text-[9px] uppercase tracking-[0.35em] font-medium text-[#C6A76A] block mb-1">
-                  Payable Summary
-                </span>
-                <h3
-                  className="text-xl text-[#0B1F3A]"
-                  style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: 600 }}
-                >
-                  Order Total
-                </h3>
-              </div>
-
-              <div className="space-y-3 text-xs">
-                <div className="flex justify-between text-[#20242B]/70 font-light">
-                  <span>Cart Items ({totalItemCount || 1})</span>
-                  <span className="font-medium text-[#20242B]">
-                    ${subtotal.toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between text-[#20242B]/70 font-light">
-                  <span>Express Courier Shipping</span>
-                  <span className="font-medium text-[#20242B]">
-                    {shipping === 0 ? "Complimentary" : `$${shipping.toFixed(2)}`}
-                  </span>
-                </div>
-                <div className="flex justify-between text-[#20242B]/70 font-light">
-                  <span>Estimated Sales Tax (8%)</span>
-                  <span className="font-medium text-[#20242B]">
-                    ${tax.toFixed(2)}
-                  </span>
-                </div>
-                <div className="pt-4 border-t border-[#20242B]/[0.08] flex justify-between items-baseline">
-                  <span className="text-xs uppercase tracking-widest font-semibold text-[#0B1F3A]">
-                    Payable Total
-                  </span>
-                  <span
-                    className="text-[#0B1F3A]"
-                    style={{
-                      fontFamily: "'Cormorant Garamond', Georgia, serif",
-                      fontSize: "26px",
-                      fontWeight: 600,
-                    }}
-                  >
-                    ${total.toFixed(2)}
-                  </span>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() =>
-                  alert(
-                    "Order placed successfully in prototype mode. Order confirmation details have been staged."
-                  )
-                }
-                className="w-full py-4 bg-[#0B1F3A] text-[#C6A76A] text-[10px] uppercase tracking-[0.3em] font-semibold hover:bg-[#C6A76A] hover:text-[#0B1F3A] transition-all duration-300 border border-[#0B1F3A]"
+      <header className="border-b border-[#0B1F3A]/10 bg-white/70 backdrop-blur-sm">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-5">
+          <div className="flex items-center justify-between gap-4">
+            <Link
+              href="/carts"
+              className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.22em] font-semibold text-[#C6A76A] hover:text-[#0B1F3A] transition-colors"
+            >
+              <svg
+                className="h-3.5 w-3.5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.75}
+                aria-hidden="true"
               >
-                Confirm & Place Order
-              </button>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M19 12H5m6 6-6-6 6-6"
+                />
+              </svg>
+              <span>Return to Bag</span>
+            </Link>
 
-              <div className="pt-2 border-t border-[#20242B]/[0.08] flex items-center justify-around text-[9px] text-[#20242B]/50 uppercase tracking-wider">
-                <span className="flex items-center gap-1.5">
-                  <Truck className="h-3.5 w-3.5 text-[#C6A76A]" strokeWidth={1.5} />
-                  <span>Insured Transit</span>
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <ShieldCheck className="h-3.5 w-3.5 text-[#C6A76A]" strokeWidth={1.5} />
-                  <span>Bespoke Packing</span>
-                </span>
-              </div>
+            <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.22em] text-[#6B6B6B]">
+              <svg
+                className="h-3.5 w-3.5 text-[#C6A76A]"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.6}
+                aria-hidden="true"
+              >
+                <rect x="5" y="11" width="14" height="10" rx="1.5" />
+                <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+              </svg>
+              <span>Encrypted Checkout</span>
+            </span>
+          </div>
+
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div>
+              <span className="text-[10px] uppercase tracking-[0.35em] font-semibold text-[#C6A76A] block mb-1">
+                EXPRESS ORDER
+              </span>
+              <h1
+                className="text-3xl sm:text-4xl text-[#0B1F3A] leading-tight"
+                style={{
+                  fontFamily: "'Cormorant Garamond', Georgia, serif",
+                  fontWeight: 600,
+                  fontStyle: "italic",
+                }}
+              >
+                Order Finalization
+              </h1>
             </div>
+
+            {!completedOrder && (
+              <div className="shrink-0">
+                <StepIndicator
+                  currentStep={activeStep === 3 ? "payment" : "delivery"}
+                />
+              </div>
+            )}
           </div>
         </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pt-8">
+        {completedOrder ? (
+          <OrderSuccessView
+            orderId={completedOrder.orderId}
+            address={completedOrder.address}
+            paymentMethod={completedOrder.paymentMethod}
+            items={completedOrder.items}
+            pricing={completedOrder.pricing}
+          />
+        ) : items.length === 0 ? (
+          <div className="py-6">
+            <EmptyState
+              variant="bag"
+              title="Your bag is empty"
+              description="Add pieces to your shopping bag before proceeding to order finalization."
+              primaryCtaLabel="Explore Collections"
+              primaryCtaHref="/collections"
+              secondaryCtaLabel="View Wishlist"
+              secondaryCtaHref="/wishlist"
+            />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+            {/* Left Column: 3-step Flipkart-style Numbered Accordion */}
+            <div className="lg:col-span-8 space-y-4">
+              {/* Step 1: Delivery Address */}
+              <AccordionStep
+                stepNumber={1}
+                title="DELIVERY ADDRESS"
+                isOpen={activeStep === 1}
+                isCompleted={addressConfirmed && Boolean(selectedAddress)}
+                canOpen
+                onChangeClick={() => setActiveStep(1)}
+                summary={
+                  selectedAddress ? (
+                    <span>
+                      <strong className="font-semibold text-[#0B1F3A]">
+                        {selectedAddress.fullName}
+                      </strong>{" "}
+                      — {selectedAddress.houseNumber},{" "}
+                      {selectedAddress.streetName}, {selectedAddress.city},{" "}
+                      {selectedAddress.state} {selectedAddress.pinCode}
+                    </span>
+                  ) : null
+                }
+              >
+                <AddressStep
+                  addresses={addresses}
+                  selectedAddressId={selectedAddressId}
+                  onSelectAddress={setManualSelectedAddressId}
+                  onSaveAddress={handleSaveAddress}
+                  onConfirmAddress={handleConfirmAddress}
+                  defaultFullName={user?.username}
+                  defaultPhone={user?.phone}
+                />
+              </AccordionStep>
+
+              {/* Step 2: Order Summary */}
+              <AccordionStep
+                stepNumber={2}
+                title="ORDER SUMMARY"
+                isOpen={activeStep === 2}
+                isCompleted={summaryConfirmed}
+                canOpen={addressConfirmed}
+                onChangeClick={() => addressConfirmed && setActiveStep(2)}
+                summary={
+                  <span className="tabular-nums">
+                    <strong className="font-semibold text-[#0B1F3A]">
+                      {pricing.totalItemCount}{" "}
+                      {pricing.totalItemCount === 1 ? "item" : "items"}
+                    </strong>{" "}
+                    · Subtotal {formatPrice(pricing.subtotal)}
+                  </span>
+                }
+              >
+                <OrderSummaryStep
+                  items={items}
+                  hasOutOfStockItem={hasOutOfStockItem}
+                  onContinue={handleConfirmSummary}
+                />
+              </AccordionStep>
+
+              {/* Step 3: Payment Options */}
+              <AccordionStep
+                stepNumber={3}
+                title="PAYMENT OPTIONS"
+                isOpen={activeStep === 3}
+                isCompleted={false}
+                canOpen={addressConfirmed && summaryConfirmed}
+                onChangeClick={() =>
+                  addressConfirmed && summaryConfirmed && setActiveStep(3)
+                }
+              >
+                <PaymentStep
+                  selectedMethod={paymentMethod}
+                  onSelectMethod={setPaymentMethod}
+                  cardDetails={cardDetails}
+                  onCardDetailsChange={setCardDetails}
+                  upiId={upiId}
+                  onUpiIdChange={setUpiId}
+                  canPlaceOrder={canPlaceOrder}
+                  onPlaceOrder={handlePlaceOrder}
+                />
+              </AccordionStep>
+            </div>
+
+            {/* Right Column: Sticky Price Details */}
+            <div className="lg:col-span-4 lg:sticky lg:top-24">
+              <PriceDetails
+                pricing={pricing}
+                ctaLabel="PLACE ORDER"
+                onCtaClick={handlePlaceOrder}
+                ctaDisabled={!canPlaceOrder}
+                ctaDisabledReason={disabledReason}
+                showCouponInput
+              />
+            </div>
+          </div>
+        )}
       </div>
-    </main>
+
+      {/* Mobile Fixed Bottom Action Bar */}
+      {!completedOrder && items.length > 0 && (
+        <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-[#0B1F3A]/15 shadow-[0_-4px_20px_rgba(11,31,58,0.08)] px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <div className="mx-auto max-w-xl flex items-center justify-between gap-4">
+            <div>
+              <span className="text-[10px] uppercase tracking-[0.22em] font-semibold text-[#6B6B6B] block">
+                Total Amount
+              </span>
+              <span
+                aria-live="polite"
+                className="text-xl font-semibold text-[#0B1F3A] tabular-nums leading-tight"
+                style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+              >
+                {(() => {
+                  const { prefix, symbol, value } = formatPriceParts(
+                    pricing.total
+                  );
+                  return (
+                    <>
+                      {prefix}
+                      <span
+                        style={{
+                          fontFamily:
+                            "var(--font-inter, 'Inter', system-ui, sans-serif)",
+                        }}
+                      >
+                        {symbol}
+                      </span>
+                      {value}
+                    </>
+                  );
+                })()}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              disabled={!canPlaceOrder}
+              onClick={handlePlaceOrder}
+              className="min-h-[46px] px-7 bg-[#0B1F3A] text-[#C6A76A] text-xs uppercase tracking-[0.24em] font-semibold hover:bg-[#C6A76A] hover:text-[#0B1F3A] transition-colors rounded-sm disabled:opacity-45 disabled:cursor-not-allowed"
+            >
+              PLACE ORDER
+            </button>
+          </div>
+        </div>
+      )}
+
+      <Toast
+        toast={toast}
+        onDismiss={() => setToast(null)}
+        hasMobileBottomBar={!completedOrder && items.length > 0}
+      />
+    </div>
   );
 }

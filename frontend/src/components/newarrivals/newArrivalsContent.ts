@@ -1,8 +1,10 @@
+import { formatPrice } from "@/components/commerce/formatters";
+
 export type NewArrival = {
   name: string;
   category: string; // for example "Jeans"
   description: string; // one or two sentences, placeholder text is fine
-  price: string; // placeholder, for example "$199.00"
+  price: string; // placeholder, for example "₹199"
   image: string; // exact path under /images/rack/
   url: string; // category page, for example "/collections/jeans"
 };
@@ -24,7 +26,7 @@ export const NEW_ARRIVALS: {
       category: "Jeans",
       description:
         "Mid-weight Japanese indigo denim cut in a relaxed straight silhouette with subtle vintage fading.",
-      price: "$199.00",
+      price: formatPrice(199),
       image: "/images/rack/jean/jean-front.webp",
       url: "/collections/jeans",
     },
@@ -33,7 +35,7 @@ export const NEW_ARRIVALS: {
       category: "T-Shirts",
       description:
         "Combed 280gsm cotton jersey finished with a structured ribbed collar and clean dropped shoulders.",
-      price: "$79.00",
+      price: formatPrice(79),
       image: "/images/rack/t%20-shirt/t-shirt-front.webp",
       url: "/collections/t-shirts",
     },
@@ -42,7 +44,7 @@ export const NEW_ARRIVALS: {
       category: "Shirts",
       description:
         "Breathable off-white woven blend tailored for an effortless drape from day through evening.",
-      price: "$129.00",
+      price: formatPrice(129),
       image: "/images/rack/shirt/shirt-front.webp",
       url: "/collections/shirts",
     },
@@ -51,7 +53,7 @@ export const NEW_ARRIVALS: {
       category: "Pants",
       description:
         "Warm sand-toned wool-blend trouser featuring crisp front pleats and a gently tapered leg.",
-      price: "$149.00",
+      price: formatPrice(149),
       image: "/images/rack/pant/pant-front.webp",
       url: "/collections/pants",
     },
@@ -60,7 +62,7 @@ export const NEW_ARRIVALS: {
       category: "Jerseys",
       description:
         "Lightweight performance knit with an ombré charcoal-to-chalk fade and reflective shoulder detailing.",
-      price: "$99.00",
+      price: formatPrice(99),
       image: "/images/rack/jersey/jersey-front.webp",
       url: "/collections/jerseys",
     },
@@ -69,7 +71,7 @@ export const NEW_ARRIVALS: {
       category: "Jackets",
       description:
         "Structured moto-inspired outerwear combining ballistic contrast panels, crimson accents, and zip pockets.",
-      price: "$249.00",
+      price: formatPrice(249),
       image: "/images/rack/jacket/jacket-front.webp",
       url: "/collections/jackets",
     },
