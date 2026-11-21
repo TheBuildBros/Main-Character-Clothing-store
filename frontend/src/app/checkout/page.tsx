@@ -15,11 +15,11 @@ import { useCartStore } from "@/store/cart";
 
 export default function CheckoutPage() {
   const [isMounted, setIsMounted] = useState(false);
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const user = useAuthStore((s) => s.user);
   const savedAddress = useAuthStore((s) => s.savedAddress);
-  const getSubtotal = useCartStore((s) => s.getSubtotal);
-  const totalItemCount = useCartStore((s) => s.getTotalItems());
+  const items = useCartStore((s) => s.items);
+  const totalItemCount = items.reduce((total, item) => total + item.quantity, 0);
+  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0) || 195;
 
   const [useDifferentAddress, setUseDifferentAddress] = useState(false);
   const [checkoutAddress, setCheckoutAddress] = useState({
@@ -50,7 +50,6 @@ export default function CheckoutPage() {
 
   if (!isMounted) return null;
 
-  const subtotal = getSubtotal() || 195;
   const shipping = subtotal >= 200 ? 0 : 15;
   const tax = subtotal * 0.08;
   const total = subtotal + shipping + tax;

@@ -20,8 +20,6 @@ export default function CartPage() {
   const addItem = useCartStore((s) => s.addItem);
   const removeItem = useCartStore((s) => s.removeItem);
   const clearCart = useCartStore((s) => s.clearCart);
-  const getSubtotal = useCartStore((s) => s.getSubtotal);
-  const totalItemCount = useCartStore((s) => s.getTotalItems());
 
   useEffect(() => {
     setIsMounted(true);
@@ -29,7 +27,8 @@ export default function CartPage() {
 
   if (!isMounted) return null;
 
-  const subtotal = getSubtotal();
+  const totalItemCount = items.reduce((total, item) => total + item.quantity, 0);
+  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shipping = subtotal > 0 ? (subtotal >= 200 ? 0 : 15) : 0;
   const estimatedTax = subtotal * 0.08;
   const estimatedTotal = subtotal + shipping + estimatedTax;

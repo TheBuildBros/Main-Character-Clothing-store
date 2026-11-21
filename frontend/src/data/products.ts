@@ -1,0 +1,1376 @@
+export type ProductCategory =
+  | "Men's Wear"
+  | "Women's Wear"
+  | "Shirts"
+  | "T-Shirts"
+  | "Trousers"
+  | "Jeans"
+  | "Dresses"
+  | "Jackets"
+  | "Accessories";
+
+export type ProductSize = "XS" | "S" | "M" | "L" | "XL" | "XXL";
+
+export interface ColorSwatch {
+  name: string;
+  hex: string;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  subtitle: string;
+  category: ProductCategory;
+  clothingType: string;
+  gender: "Men" | "Women" | "Unisex";
+  price: number;
+  originalPrice?: number;
+  discount?: number;
+  sizes: ProductSize[];
+  colors: ColorSwatch[];
+  primaryImage: string;
+  alternateImage: string;
+  brand: string;
+  material: string;
+  availability: "In Stock" | "Limited Archive" | "Pre-Order";
+  isNew?: boolean;
+  isFeatured?: boolean;
+  isBestSeller?: boolean;
+  badge?: string;
+  rating: number;
+  reviewsCount: number;
+  description: string;
+  details: string[];
+
+  // ── Context-Aware Category Specific Attributes ──
+  fit?: string;
+  // Shirts
+  sleeveLength?: "Long Sleeve" | "Short Sleeve";
+  collarStyle?: "Band Collar" | "Cuban Spread" | "Pointed Atelier Collar" | "Mandarin Collar";
+  // T-Shirts
+  neckline?: "Crewneck" | "Mockneck" | "Ribbed Collar";
+  sleeveType?: "Short Sleeve" | "Elbow-Length" | "Long Sleeve";
+  // Trousers
+  waistType?: "High-Rise Tailored" | "Elasticated Drawstring" | "Mid-Rise Classic";
+  length?: "Full Length" | "Cropped Ankle";
+  // Jeans
+  wash?: "Raw Indigo" | "Vintage Stone Wash" | "Black Sulfur" | "White Ecru";
+  waist?: "High-Rise" | "Mid-Rise";
+  rise?: "12.5\" High Rise" | "11\" Mid Rise";
+  // Dresses
+  dressLength?: "Floor Length" | "Midi" | "Maxi" | "Mini";
+  silhouette?: "Bias-Cut Slip" | "Architectural Wrap" | "Blazer Dress" | "Column Gown";
+  occasion?: "Evening Gala" | "Cocktail Soirée" | "Gallery Opening" | "Day Atelier";
+  // Jackets
+  jacketType?: "Overcoat" | "Trench" | "Bomber Blouson" | "Atelier Jacket" | "Tailored Blazer";
+}
+
+export const CATEGORIES_LIST: { id: string; label: string; category?: ProductCategory }[] = [
+  { id: "all", label: "All Creations" },
+  { id: "jackets", label: "Jackets", category: "Jackets" },
+  { id: "shirts", label: "Shirts", category: "Shirts" },
+  { id: "t-shirts", label: "T-Shirts", category: "T-Shirts" },
+  { id: "trousers", label: "Trousers", category: "Trousers" },
+  { id: "jeans", label: "Jeans", category: "Jeans" },
+  { id: "dresses", label: "Dresses", category: "Dresses" },
+  { id: "accessories", label: "Accessories", category: "Accessories" },
+  { id: "mens", label: "Men's Wear", category: "Men's Wear" },
+  { id: "womens", label: "Women's Wear", category: "Women's Wear" },
+];
+
+export const SIZES_LIST: ProductSize[] = ["XS", "S", "M", "L", "XL", "XXL"];
+
+export const COLOR_SWATCHES: ColorSwatch[] = [
+  { name: "Obsidian Navy", hex: "#0B1F3A" },
+  { name: "Champagne Gold", hex: "#C6A76A" },
+  { name: "Bone Ivory", hex: "#F8F6F1" },
+  { name: "Charcoal Black", hex: "#1A1D20" },
+  { name: "Camel Tan", hex: "#A87B51" },
+  { name: "Olive Moss", hex: "#4A5335" },
+  { name: "Wine Burgundy", hex: "#5B1D28" },
+  { name: "Slate Grey", hex: "#6E757C" },
+];
+
+export const BRANDS_LIST = [
+  "MainCharacter Atelier",
+  "Protagonist Core",
+  "Tokyo Runway Lab",
+  "Okayama Denim Guild",
+  "Bespoke Cashmere",
+];
+
+export const MATERIALS_LIST = [
+  "100% Japanese Silk",
+  "14oz Okayama Selvedge Denim",
+  "Double-Faced Cashmere",
+  "500 GSM Loopwheel Cotton",
+  "French Linen",
+  "Tropical Virgin Wool",
+  "Bonded Technical Gabardine",
+  "Italian Full-Grain Leather",
+];
+
+export const SORT_OPTIONS = [
+  { id: "featured", label: "Featured" },
+  { id: "newest", label: "New Arrivals" },
+  { id: "price-asc", label: "Price: Low to High" },
+  { id: "price-desc", label: "Price: High to Low" },
+  { id: "bestsellers", label: "Best Selling" },
+] as const;
+
+export type SortOptionId = (typeof SORT_OPTIONS)[number]["id"];
+
+// ── EDITORIAL CATEGORY DATA ──
+export interface CategoryEditorial {
+  id: string;
+  categoryName: string;
+  eyebrow: string;
+  headline: string;
+  italicHeadline: string;
+  description: string;
+  quote: string;
+  quoteAuthor: string;
+  heroImage: string;
+  japaneseKanji: string;
+  editionBadge: string;
+  chapterNumber: string;
+}
+
+export const CATEGORY_EDITORIAL_MAP: Record<string, CategoryEditorial> = {
+  all: {
+    id: "all",
+    categoryName: "All Creations",
+    eyebrow: "AUTUMN / WINTER 2026 SALON",
+    headline: "DISCOVER YOUR",
+    italicHeadline: "Presence & Style.",
+    description:
+      "Architectural silhouettes tailored from Mongolian double-faced cashmere, sand-washed Habotai silks, and 14oz shuttle-loomed Okayama selvedge. Sculpted for those who command the room.",
+    quote:
+      "True luxury does not clamor for attention; it commands presence through the silent weight of unbleached silk and the architectural precision of an artisan lapel.",
+    quoteAuthor: "Tokyo Runway Lab · Salon Master",
+    heroImage:
+      "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=2000&q=85",
+    japaneseKanji: "主角",
+    editionBadge: "EDITION · N° 01–24 · COMPLETE ARCHIVE",
+    chapterNumber: "SALON ARCHIVE",
+  },
+  jackets: {
+    id: "jackets",
+    categoryName: "Jackets & Outerwear",
+    eyebrow: "ATELIER TAILORING · CHAPTER 01",
+    headline: "ARCHITECTURAL",
+    italicHeadline: "Outerwear & Coats.",
+    description:
+      "Heavyweight double-faced Mongolian cashmere, deconstructed floating canvas shoulders, and sand-washed technical silk gabardine. Cut with sculptural precision.",
+    quote:
+      "An overcoat is not merely a garment; it is an architectural fortress defining one's posture and dignity against the cold.",
+    quoteAuthor: "MainCharacter Atelier · Master Tailor",
+    heroImage:
+      "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=2000&q=85",
+    japaneseKanji: "外套",
+    editionBadge: "EDITION · CHAPTER 01 · TOKYO SALON",
+    chapterNumber: "CHAPTER 01",
+  },
+  shirts: {
+    id: "shirts",
+    categoryName: "Artisanal Shirts",
+    eyebrow: "HABOTAI SILK & POPLIN · CHAPTER 02",
+    headline: "SAND-WASHED",
+    italicHeadline: "Silks & Shirting.",
+    description:
+      "Fluid sand-washed Habotai silks, crisp Japanese high-count cotton poplin, and hand-turned Cuban collars fastened with bespoke mother-of-pearl buttons.",
+    quote:
+      "The shirt is the closest dialogue between fabric and human form. It demands softness without surrender of structure.",
+    quoteAuthor: "Atelier Shirting Guild · Tokyo",
+    heroImage:
+      "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=2000&q=85",
+    japaneseKanji: "長袖",
+    editionBadge: "EDITION · CHAPTER 02 · SILK SALON",
+    chapterNumber: "CHAPTER 02",
+  },
+  "t-shirts": {
+    id: "t-shirts",
+    categoryName: "T-Shirts & Heavyweight Knits",
+    eyebrow: "500 GSM LOOPWHEEL · CHAPTER 03",
+    headline: "HERITAGE",
+    italicHeadline: "Tubular Knits & Tees.",
+    description:
+      "Spun on vintage Wakayama tubular loopwheel cylinders with zero side-seams. Substantial 300–500 GSM cotton drape crafted for generational wear.",
+    quote:
+      "When a basic garment is crafted without compromise, it ceases to be casual and becomes iconic.",
+    quoteAuthor: "Wakayama Loopwheel Archives",
+    heroImage:
+      "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=2000&q=85",
+    japaneseKanji: "編物",
+    editionBadge: "EDITION · CHAPTER 03 · LOOPWHEEL GUILD",
+    chapterNumber: "CHAPTER 03",
+  },
+  trousers: {
+    id: "trousers",
+    categoryName: "Architectural Trousers",
+    eyebrow: "BESPOKE DRAPE · CHAPTER 04",
+    headline: "SCULPTURAL",
+    italicHeadline: "Pleats & Trousers.",
+    description:
+      "Deep forward pleats, high-waisted silhouettes, and tropical virgin wool woven by centuries-old mills. Fluid sartorial grace in every step.",
+    quote:
+      "The line of the trouser establishes the architecture of the entire silhouette. It must be both effortless and razor sharp.",
+    quoteAuthor: "Bespoke Suiting Salon",
+    heroImage:
+      "https://images.unsplash.com/photo-1479064555552-3ef4979f8908?auto=format&fit=crop&w=2000&q=85",
+    japaneseKanji: "ズボン",
+    editionBadge: "EDITION · CHAPTER 04 · TAILORED DRAPE",
+    chapterNumber: "CHAPTER 04",
+  },
+  jeans: {
+    id: "jeans",
+    categoryName: "Okayama Selvedge Jeans",
+    eyebrow: "14OZ SHUTTLE LOOM · CHAPTER 05",
+    headline: "OKAYAMA",
+    italicHeadline: "Artisan Selvedge Denim.",
+    description:
+      "Woven at low shuttle-tension in Kojima on vintage Toyoda looms. Dyed in deep plant indigo and red-line selvedge edge, designed to age with sublime character.",
+    quote:
+      "Raw selvedge denim is living textile sculpture. It records every step, every posture, and every journey of its master.",
+    quoteAuthor: "Kojima Master Dyer",
+    heroImage:
+      "https://images.unsplash.com/photo-1542272604-780c96856592?auto=format&fit=crop&w=2000&q=85",
+    japaneseKanji: "藍染",
+    editionBadge: "EDITION · CHAPTER 05 · KOJIMA GUILD",
+    chapterNumber: "CHAPTER 05",
+  },
+  dresses: {
+    id: "dresses",
+    categoryName: "Sculptural Dresses & Gowns",
+    eyebrow: "EVENING COUTURE · CHAPTER 06",
+    headline: "FLUID BIAS-CUT",
+    italicHeadline: "Silks & Evening Gowns.",
+    description:
+      "Asymmetrical bias-cut silk crepe, structured double-breasted blazer dresses, and ribbed cashmere midi silhouettes created for nocturnal radiance.",
+    quote:
+      "A gown should not merely adorn the body; it should evoke an aura of enigmatic grace that commands every room.",
+    quoteAuthor: "Haute Couture Salon · Paris",
+    heroImage:
+      "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=2000&q=85",
+    japaneseKanji: "礼服",
+    editionBadge: "EDITION · CHAPTER 06 · RUNWAY COUTURE",
+    chapterNumber: "CHAPTER 06",
+  },
+  accessories: {
+    id: "accessories",
+    categoryName: "Atelier Accessories",
+    eyebrow: "PRECIOUS OBJECTS · CHAPTER 07",
+    headline: "HAND-CRAFTED",
+    italicHeadline: "Leather & Objects.",
+    description:
+      "Italian vegetable-tanned bridle calfskin, solid obsidian signet hardware, and pure Mongolian cashmere scarves made to accompany a lifetime.",
+    quote:
+      "Accessories are the subtle punctuation marks that transform an outfit into an unmistakable statement of character.",
+    quoteAuthor: "Atelier Maroquinerie",
+    heroImage:
+      "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=2000&q=85",
+    japaneseKanji: "装身具",
+    editionBadge: "EDITION · CHAPTER 07 · PRECIOUS ARCHIVE",
+    chapterNumber: "CHAPTER 07",
+  },
+};
+
+// ── CONTEXT-AWARE FILTER FACET DEFINITIONS PER CATEGORY ──
+export interface FacetOption {
+  facetKey: string;
+  label: string;
+  options: string[];
+}
+
+export const CATEGORY_FACETS_CONFIG: Record<string, FacetOption[]> = {
+  shirts: [
+    {
+      facetKey: "fit",
+      label: "Fit",
+      options: ["Relaxed Oversized", "Tailored Fit", "Classic Drape"],
+    },
+    {
+      facetKey: "sleeveLength",
+      label: "Sleeve Length",
+      options: ["Long Sleeve", "Short Sleeve"],
+    },
+    {
+      facetKey: "collarStyle",
+      label: "Collar Style",
+      options: ["Band Collar", "Cuban Spread", "Pointed Atelier Collar", "Mandarin Collar"],
+    },
+  ],
+  "t-shirts": [
+    {
+      facetKey: "fit",
+      label: "Fit",
+      options: ["Boxy Dropped Shoulder", "Regular Fit", "Relaxed Fit"],
+    },
+    {
+      facetKey: "neckline",
+      label: "Neckline",
+      options: ["Crewneck", "Mockneck", "Ribbed Collar"],
+    },
+    {
+      facetKey: "sleeveType",
+      label: "Sleeve Type",
+      options: ["Short Sleeve", "Elbow-Length", "Long Sleeve"],
+    },
+  ],
+  trousers: [
+    {
+      facetKey: "fit",
+      label: "Fit",
+      options: ["Wide-Leg Pleated", "Straight Cut", "Relaxed Tapered"],
+    },
+    {
+      facetKey: "waistType",
+      label: "Waist Type",
+      options: ["High-Rise Tailored", "Elasticated Drawstring", "Mid-Rise Classic"],
+    },
+    {
+      facetKey: "length",
+      label: "Length",
+      options: ["Full Length", "Cropped Ankle"],
+    },
+  ],
+  jeans: [
+    {
+      facetKey: "fit",
+      label: "Fit",
+      options: ["Wide Leg", "Straight Cut", "Relaxed Taper"],
+    },
+    {
+      facetKey: "wash",
+      label: "Wash",
+      options: ["Raw Indigo", "Vintage Stone Wash", "Black Sulfur", "White Ecru"],
+    },
+    {
+      facetKey: "waist",
+      label: "Waist",
+      options: ["High-Rise", "Mid-Rise"],
+    },
+    {
+      facetKey: "rise",
+      label: "Rise",
+      options: ["12.5\" High Rise", "11\" Mid Rise"],
+    },
+  ],
+  dresses: [
+    {
+      facetKey: "dressLength",
+      label: "Dress Length",
+      options: ["Floor Length", "Midi", "Maxi"],
+    },
+    {
+      facetKey: "silhouette",
+      label: "Silhouette",
+      options: ["Bias-Cut Slip", "Architectural Wrap", "Blazer Dress", "Column Gown"],
+    },
+    {
+      facetKey: "occasion",
+      label: "Occasion",
+      options: ["Evening Gala", "Cocktail Soirée", "Gallery Opening", "Day Atelier"],
+    },
+  ],
+  jackets: [
+    {
+      facetKey: "jacketType",
+      label: "Jacket Type",
+      options: ["Overcoat", "Trench", "Bomber Blouson", "Atelier Jacket", "Tailored Blazer"],
+    },
+    {
+      facetKey: "fit",
+      label: "Fit",
+      options: ["Architectural Boxy", "Oversized Tailored", "Structured Relaxed"],
+    },
+  ],
+};
+
+// ── FULL PRODUCT CATALOG WITH CONTEXT-AWARE ATTRIBUTES ──
+export const PRODUCTS_CATALOG: Product[] = [
+  // ── JACKETS (5) ──
+  {
+    id: "mc-01",
+    name: "Architectural Double-Faced Cashmere Overcoat",
+    subtitle: "Heavyweight double-faced cashmere with bespoke Japanese horn buttons",
+    category: "Jackets",
+    clothingType: "Coats & Outerwear",
+    gender: "Men",
+    price: 890,
+    originalPrice: 1100,
+    discount: 20,
+    sizes: ["S", "M", "L", "XL"],
+    colors: [
+      { name: "Obsidian Navy", hex: "#0B1F3A" },
+      { name: "Camel Tan", hex: "#A87B51" },
+      { name: "Charcoal Black", hex: "#1A1D20" },
+    ],
+    primaryImage: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=900&q=80",
+    alternateImage: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=900&q=80",
+    brand: "MainCharacter Atelier",
+    material: "Double-Faced Cashmere",
+    availability: "In Stock",
+    isNew: false,
+    isFeatured: true,
+    isBestSeller: true,
+    badge: "Sale -20%",
+    rating: 4.95,
+    reviewsCount: 38,
+    description: "Hand-finished in our Tokyo atelier, this overcoat combines sculptural shoulder architecture with the whisper-weight warmth of Mongolian double-faced cashmere.",
+    details: [
+      "100% Mongolian Cashmere, 680 GSM",
+      "Genuine horn buttons from Kyoto",
+      "Deconstructed shoulder with floating canvas",
+      "Dry clean only by luxury textile specialist",
+    ],
+    jacketType: "Overcoat",
+    fit: "Architectural Boxy",
+  },
+  {
+    id: "mc-02",
+    name: "Bespoke Kimono Belted Trench",
+    subtitle: "Fluid drape trench constructed in sand-washed technical silk gabardine",
+    category: "Jackets",
+    clothingType: "Coats & Outerwear",
+    gender: "Women",
+    price: 920,
+    sizes: ["XS", "S", "M", "L"],
+    colors: [
+      { name: "Bone Ivory", hex: "#F8F6F1" },
+      { name: "Obsidian Navy", hex: "#0B1F3A" },
+    ],
+    primaryImage: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80",
+    alternateImage: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=900&q=80",
+    brand: "Tokyo Runway Lab",
+    material: "100% Japanese Silk",
+    availability: "Limited Archive",
+    isNew: true,
+    isFeatured: true,
+    isBestSeller: false,
+    badge: "Runway Archive",
+    rating: 5.0,
+    reviewsCount: 19,
+    description: "An homage to Edo-era ceremonial outerwear, reimagined as a fluid modern trench with an elongated obi sash and raglan storm flaps.",
+    details: [
+      "100% Japanese Habotai Silk treated for water repellency",
+      "Unlined internal French seams with champagne piping",
+      "Deep storm flap and modular throat latch",
+      "Made in Tokyo, Japan",
+    ],
+    jacketType: "Trench",
+    fit: "Oversized Tailored",
+  },
+  {
+    id: "mc-08",
+    name: "Minimalist Utility Blouson",
+    subtitle: "High-density technical nylon with brushed brass riri zippers",
+    category: "Jackets",
+    clothingType: "Coats & Outerwear",
+    gender: "Men",
+    price: 480,
+    sizes: ["S", "M", "L", "XL"],
+    colors: [
+      { name: "Charcoal Black", hex: "#1A1D20" },
+      { name: "Olive Moss", hex: "#4A5335" },
+    ],
+    primaryImage: "https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=900&q=80",
+    alternateImage: "https://images.unsplash.com/photo-1520975954732-35dd22299614?auto=format&fit=crop&w=900&q=80",
+    brand: "Protagonist Core",
+    material: "Bonded Technical Gabardine",
+    availability: "In Stock",
+    isNew: false,
+    isFeatured: false,
+    isBestSeller: true,
+    rating: 4.85,
+    reviewsCount: 31,
+    description: "Architectural cropped blouson crafted from bonded gabardine with modular internal sling straps and laser-cut storm welt pockets.",
+    details: [
+      "Swiss Riri double-headed brass zippers",
+      "Waterproof seam-sealed membrane (10,000 mm)",
+      "Integrated internal carry harness",
+    ],
+    jacketType: "Bomber Blouson",
+    fit: "Structured Relaxed",
+  },
+  {
+    id: "mc-13",
+    name: "Cropped Collarless Wool Atelier Jacket",
+    subtitle: "Sculptural boxy jacket in dense double-cloth virgin wool",
+    category: "Jackets",
+    clothingType: "Coats & Outerwear",
+    gender: "Women",
+    price: 640,
+    sizes: ["XS", "S", "M", "L"],
+    colors: [
+      { name: "Obsidian Navy", hex: "#0B1F3A" },
+      { name: "Bone Ivory", hex: "#F8F6F1" },
+    ],
+    primaryImage: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=900&q=80",
+    alternateImage: "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=900&q=80",
+    brand: "MainCharacter Atelier",
+    material: "Tropical Virgin Wool",
+    availability: "Limited Archive",
+    isNew: true,
+    isFeatured: true,
+    isBestSeller: false,
+    badge: "Limited Edition",
+    rating: 4.95,
+    reviewsCount: 14,
+    description: "A masterclass in restraint. Collarless architectural silhouette framing the collarbone, lined in pure champagne cupro with hidden magnetic horn closures.",
+    details: [
+      "100% Australian Virgin Wool",
+      "Concealed magnetic placket closures",
+      "Curved kimono sleeve cut",
+    ],
+    jacketType: "Atelier Jacket",
+    fit: "Architectural Boxy",
+  },
+  {
+    id: "mc-21",
+    name: "Bonded Technical Flight Bomber",
+    subtitle: "Heavyweight nylon bomber with champagne satin lining",
+    category: "Jackets",
+    clothingType: "Coats & Outerwear",
+    gender: "Men",
+    price: 520,
+    sizes: ["S", "M", "L", "XL", "XXL"],
+    colors: [
+      { name: "Obsidian Navy", hex: "#0B1F3A" },
+      { name: "Olive Moss", hex: "#4A5335" },
+    ],
+    primaryImage: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=900&q=80",
+    alternateImage: "https://images.unsplash.com/photo-1520975954732-35dd22299614?auto=format&fit=crop&w=900&q=80",
+    brand: "Protagonist Core",
+    material: "Bonded Technical Gabardine",
+    availability: "In Stock",
+    isNew: false,
+    isFeatured: false,
+    isBestSeller: false,
+    rating: 4.82,
+    reviewsCount: 22,
+    description: "Refined luxury adaptation of the military MA-1 silhouette, lined with liquid champagne cupro and trimmed with heavyweight ribbed wool hems.",
+    details: [
+      "Custom gunmetal hardware with engraved monogram",
+      "Thermore insulation padding for sub-zero warmth",
+      "Two interior passport pockets",
+    ],
+    jacketType: "Bomber Blouson",
+    fit: "Structured Relaxed",
+  },
+
+  // ── SHIRTS (4) ──
+  {
+    id: "mc-04",
+    name: "Sand-Washed Cupro Editorial Shirt",
+    subtitle: "Ultra-fluid silk-touch shirting with concealed mother-of-pearl placket",
+    category: "Shirts",
+    clothingType: "Shirting",
+    gender: "Men",
+    price: 220,
+    sizes: ["XS", "S", "M", "L", "XL"],
+    colors: [
+      { name: "Bone Ivory", hex: "#F8F6F1" },
+      { name: "Obsidian Navy", hex: "#0B1F3A" },
+      { name: "Champagne Gold", hex: "#C6A76A" },
+    ],
+    primaryImage: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=900&q=80",
+    alternateImage: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=900&q=80",
+    brand: "Protagonist Core",
+    material: "100% Japanese Silk",
+    availability: "In Stock",
+    isNew: true,
+    isFeatured: true,
+    isBestSeller: true,
+    badge: "New Arrival",
+    rating: 4.88,
+    reviewsCount: 42,
+    description: "A staple of the protagonist silhouette. Sand-washed Japanese cupro breathes effortlessly and drapes with liquid grace against the torso.",
+    details: [
+      "100% Eco-Certified Cupro Fibre",
+      "Hand-carved smoked mother-of-pearl buttons",
+      "Concealed placket with minimal mandarin spread collar",
+    ],
+    fit: "Relaxed Oversized",
+    sleeveLength: "Long Sleeve",
+    collarStyle: "Mandarin Collar",
+  },
+  {
+    id: "mc-11",
+    name: "French Linen Relaxed Resort Shirt",
+    subtitle: "Air-washed Normandy linen with deep open Cuban collar",
+    category: "Shirts",
+    clothingType: "Shirting",
+    gender: "Men",
+    price: 195,
+    sizes: ["S", "M", "L", "XL"],
+    colors: [
+      { name: "Bone Ivory", hex: "#F8F6F1" },
+      { name: "Camel Tan", hex: "#A87B51" },
+      { name: "Slate Grey", hex: "#6E757C" },
+    ],
+    primaryImage: "https://images.unsplash.com/photo-1589310243389-96a5483213a8?auto=format&fit=crop&w=900&q=80",
+    alternateImage: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=900&q=80",
+    brand: "MainCharacter Atelier",
+    material: "French Linen",
+    availability: "In Stock",
+    isNew: false,
+    isFeatured: false,
+    isBestSeller: true,
+    rating: 4.79,
+    reviewsCount: 29,
+    description: "Cultivated in Normandy and spun into crisp, airy yarns that soften with every wearing. Features a fluid camp collar and natural corozo nut buttons.",
+    details: [
+      "100% European Certified Normandy Linen",
+      "Pre-washed to eliminate shrinkage",
+      "Relaxed split side hem",
+    ],
+    fit: "Relaxed Oversized",
+    sleeveLength: "Short Sleeve",
+    collarStyle: "Cuban Spread",
+  },
+  {
+    id: "mc-15",
+    name: "Sculptural Draped Silk Blouse",
+    subtitle: "Heavyweight mulberry silk with cascading crossover collar",
+    category: "Shirts",
+    clothingType: "Shirting",
+    gender: "Women",
+    price: 340,
+    sizes: ["XS", "S", "M", "L"],
+    colors: [
+      { name: "Champagne Gold", hex: "#C6A76A" },
+      { name: "Bone Ivory", hex: "#F8F6F1" },
+      { name: "Charcoal Black", hex: "#1A1D20" },
+    ],
+    primaryImage: "https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?auto=format&fit=crop&w=900&q=80",
+    alternateImage: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80",
+    brand: "Tokyo Runway Lab",
+    material: "100% Japanese Silk",
+    availability: "In Stock",
+    isNew: false,
+    isFeatured: false,
+    isBestSeller: false,
+    rating: 4.9,
+    reviewsCount: 16,
+    description: "Cut on the true bias from 22-momme Japanese Habotai silk. The neckline folds organically into a self-tie sash that can be worn draped or loosely knotted.",
+    details: [
+      "22-Momme 100% Mulberry Silk",
+      "French bound seams throughout",
+      "Elongated mitered cuffs with mother-of-pearl links",
+    ],
+    fit: "Tailored Fit",
+    sleeveLength: "Long Sleeve",
+    collarStyle: "Pointed Atelier Collar",
+  },
+  {
+    id: "mc-26",
+    name: "Habotai Silk Band-Collar Tunic",
+    subtitle: "Sand-washed Habotai silk with architectural elongated hem",
+    category: "Shirts",
+    clothingType: "Shirting",
+    gender: "Men",
+    price: 260,
+    sizes: ["S", "M", "L", "XL"],
+    colors: [
+      { name: "Obsidian Navy", hex: "#0B1F3A" },
+      { name: "Bone Ivory", hex: "#F8F6F1" },
+    ],
+    primaryImage: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=900&q=80",
+    alternateImage: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=900&q=80",
+    brand: "MainCharacter Atelier",
+    material: "100% Japanese Silk",
+    availability: "In Stock",
+    isNew: true,
+    isFeatured: true,
+    badge: "Atelier Core",
+    rating: 4.92,
+    reviewsCount: 18,
+    description: "An elongated atelier silhouette with a clean mandarin band collar, crafted from washed Habotai silk that catches light with a subdued champagne sheen.",
+    details: [
+      "100% Japanese Washed Silk",
+      "Hand-sewn smoked pearl buttons",
+      "Split drop tail with reinforced gussets",
+    ],
+    fit: "Classic Drape",
+    sleeveLength: "Long Sleeve",
+    collarStyle: "Band Collar",
+  },
+
+  // ── T-SHIRTS & KNITS (4) ──
+  {
+    id: "mc-06",
+    name: "500 GSM Heavyweight Loopwheel Boxy Hoodie",
+    subtitle: "Tubular knit loopwheel fleece with seamless side construction",
+    category: "T-Shirts",
+    clothingType: "Knitwear & Sweats",
+    gender: "Unisex",
+    price: 280,
+    sizes: ["S", "M", "L", "XL", "XXL"],
+    colors: [
+      { name: "Obsidian Navy", hex: "#0B1F3A" },
+      { name: "Charcoal Black", hex: "#1A1D20" },
+      { name: "Bone Ivory", hex: "#F8F6F1" },
+    ],
+    primaryImage: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=900&q=80",
+    alternateImage: "https://images.unsplash.com/photo-1509967419530-da38b4704bc6?auto=format&fit=crop&w=900&q=80",
+    brand: "MainCharacter Atelier",
+    material: "500 GSM Loopwheel Cotton",
+    availability: "In Stock",
+    isNew: false,
+    isFeatured: true,
+    isBestSeller: true,
+    badge: "Iconic Piece",
+    rating: 4.98,
+    reviewsCount: 88,
+    description: "Spun on antique 1920s tubular loopwheel cylinders in Wakayama, Japan. Only one meter of fabric is produced per machine hour, producing an indestructible, cloud-soft fleece.",
+    details: [
+      "500 GSM 100% Long-Staple Japanese Cotton",
+      "Zero side seams for eternal dimensional stability",
+      "Double-layered crossover hood without drawstrings",
+    ],
+    fit: "Boxy Dropped Shoulder",
+    neckline: "Mockneck",
+    sleeveType: "Long Sleeve",
+  },
+  {
+    id: "mc-12",
+    name: "Carbon Wash Heavyweight Boxy Tee",
+    subtitle: "320 GSM combed jersey with ribbed high crewneck",
+    category: "T-Shirts",
+    clothingType: "T-Shirts & Jersey",
+    gender: "Unisex",
+    price: 130,
+    sizes: ["XS", "S", "M", "L", "XL", "XXL"],
+    colors: [
+      { name: "Charcoal Black", hex: "#1A1D20" },
+      { name: "Bone Ivory", hex: "#F8F6F1" },
+      { name: "Obsidian Navy", hex: "#0B1F3A" },
+    ],
+    primaryImage: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80",
+    alternateImage: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=900&q=80",
+    brand: "Protagonist Core",
+    material: "500 GSM Loopwheel Cotton",
+    availability: "In Stock",
+    isNew: false,
+    isFeatured: false,
+    isBestSeller: true,
+    rating: 4.86,
+    reviewsCount: 74,
+    description: "The fundamental protagonist tee. Heavyweight organic cotton washed with carbon enzymes for an ultra-matte, lived-in feel with sharp architectural drape.",
+    details: [
+      "320 GSM Heavyweight Organic Cotton",
+      "Twin-needle cover-stitched hems",
+      "High-density 1x1 rib collar that never sags",
+    ],
+    fit: "Boxy Dropped Shoulder",
+    neckline: "Crewneck",
+    sleeveType: "Short Sleeve",
+  },
+  {
+    id: "mc-23",
+    name: "Fine Gauge Merino Mockneck Knit",
+    subtitle: "Ultra-fine 18.5 micron Australian merino in tailored silhouette",
+    category: "T-Shirts",
+    clothingType: "Knitwear & Sweats",
+    gender: "Men",
+    price: 240,
+    sizes: ["S", "M", "L", "XL"],
+    colors: [
+      { name: "Charcoal Black", hex: "#1A1D20" },
+      { name: "Obsidian Navy", hex: "#0B1F3A" },
+      { name: "Wine Burgundy", hex: "#5B1D28" },
+    ],
+    primaryImage: "https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&w=900&q=80",
+    alternateImage: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80",
+    brand: "Bespoke Cashmere",
+    material: "Double-Faced Cashmere",
+    availability: "In Stock",
+    isNew: false,
+    isFeatured: false,
+    isBestSeller: false,
+    rating: 4.9,
+    reviewsCount: 20,
+    description: "Spun in Biella, Italy from 18.5-micron extra-fine merino wool. Delivers temperature-regulating warmth in a razor-sharp, zero-bulk under-jacket layer.",
+    details: [
+      "100% Extra-Fine Merino Wool, 16-Gauge",
+      "Fully fashioned seam linking throughout",
+      "Ribbed collar, cuffs, and hem with Lycra recovery",
+    ],
+    fit: "Regular Fit",
+    neckline: "Mockneck",
+    sleeveType: "Long Sleeve",
+  },
+  {
+    id: "mc-27",
+    name: "Heavyweight Raw-Edge Organic Crewneck",
+    subtitle: "Dense 380 GSM Japanese cotton tee with subtle drop shoulder",
+    category: "T-Shirts",
+    clothingType: "T-Shirts & Jersey",
+    gender: "Unisex",
+    price: 145,
+    sizes: ["S", "M", "L", "XL"],
+    colors: [
+      { name: "Bone Ivory", hex: "#F8F6F1" },
+      { name: "Champagne Gold", hex: "#C6A76A" },
+    ],
+    primaryImage: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=900&q=80",
+    alternateImage: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=900&q=80",
+    brand: "MainCharacter Atelier",
+    material: "500 GSM Loopwheel Cotton",
+    availability: "In Stock",
+    isNew: true,
+    isFeatured: false,
+    rating: 4.88,
+    reviewsCount: 15,
+    description: "Designed with architectural proportions. 380 GSM combed cotton with blind-hemmed cuffs and a clean ribbed collar that retains its shape over years.",
+    details: [
+      "380 GSM Pure Organic Cotton",
+      "Enzyme-washed for a velvet handfeel",
+      "Signature Japanese archive monogram patch",
+    ],
+    fit: "Relaxed Fit",
+    neckline: "Ribbed Collar",
+    sleeveType: "Elbow-Length",
+  },
+
+  // ── TROUSERS (4) ──
+  {
+    id: "mc-07",
+    name: "High-Waisted Pleated Virgin Wool Trouser",
+    subtitle: "Double forward pleats tailored in tropical wool suiting",
+    category: "Trousers",
+    clothingType: "Trousers & Tailoring",
+    gender: "Men",
+    price: 360,
+    sizes: ["S", "M", "L", "XL"],
+    colors: [
+      { name: "Obsidian Navy", hex: "#0B1F3A" },
+      { name: "Charcoal Black", hex: "#1A1D20" },
+      { name: "Slate Grey", hex: "#6E757C" },
+    ],
+    primaryImage: "https://images.unsplash.com/photo-1479064555552-3ef4979f8908?auto=format&fit=crop&w=900&q=80",
+    alternateImage: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=900&q=80",
+    brand: "MainCharacter Atelier",
+    material: "Tropical Virgin Wool",
+    availability: "In Stock",
+    isNew: true,
+    isFeatured: true,
+    isBestSeller: true,
+    badge: "Best Seller",
+    rating: 4.93,
+    reviewsCount: 52,
+    description: "Classic Savile Row drape meets contemporary Tokyo volume. Cut with an extended tab waistband, dual forward pleats, and a fluid wide straight leg.",
+    details: [
+      "100% Super 120s Tropical Virgin Wool",
+      "Side waist-adjuster tabs with brass buckles",
+      "Lined to the knee in cupro satin",
+    ],
+    fit: "Wide-Leg Pleated",
+    waistType: "High-Rise Tailored",
+    length: "Full Length",
+  },
+  {
+    id: "mc-10",
+    name: "Wide-Leg Tailored Gabardine Trouser",
+    subtitle: "Heavy drape Japanese cotton-wool gabardine with pressed crease",
+    category: "Trousers",
+    clothingType: "Trousers & Tailoring",
+    gender: "Women",
+    price: 320,
+    sizes: ["XS", "S", "M", "L"],
+    colors: [
+      { name: "Bone Ivory", hex: "#F8F6F1" },
+      { name: "Camel Tan", hex: "#A87B51" },
+      { name: "Obsidian Navy", hex: "#0B1F3A" },
+    ],
+    primaryImage: "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=900&q=80",
+    alternateImage: "https://images.unsplash.com/photo-1479064555552-3ef4979f8908?auto=format&fit=crop&w=900&q=80",
+    brand: "Tokyo Runway Lab",
+    material: "Bonded Technical Gabardine",
+    availability: "In Stock",
+    isNew: false,
+    isFeatured: false,
+    isBestSeller: true,
+    rating: 4.9,
+    reviewsCount: 34,
+    description: "Sculpted high-waisted silhouette designed to elongate the leg. The bonded gabardine holds a razor-sharp permanent crease through continuous wear.",
+    details: [
+      "Bonded Technical Gabardine with cupro backing",
+      "Concealed zip fly with hook-and-bar closure",
+      "Deep slant side pockets and rear welt pockets",
+    ],
+    fit: "Straight Cut",
+    waistType: "High-Rise Tailored",
+    length: "Full Length",
+  },
+  {
+    id: "mc-22",
+    name: "Relaxed Drawstring Silk-Cupro Pant",
+    subtitle: "Fluid drape casual trouser with interior silk braided cord",
+    category: "Trousers",
+    clothingType: "Trousers & Tailoring",
+    gender: "Unisex",
+    price: 270,
+    sizes: ["XS", "S", "M", "L", "XL"],
+    colors: [
+      { name: "Obsidian Navy", hex: "#0B1F3A" },
+      { name: "Bone Ivory", hex: "#F8F6F1" },
+    ],
+    primaryImage: "https://images.unsplash.com/photo-1517445312882-bc9910d016b7?auto=format&fit=crop&w=900&q=80",
+    alternateImage: "https://images.unsplash.com/photo-1479064555552-3ef4979f8908?auto=format&fit=crop&w=900&q=80",
+    brand: "Protagonist Core",
+    material: "100% Japanese Silk",
+    availability: "In Stock",
+    isNew: false,
+    isFeatured: false,
+    isBestSeller: false,
+    rating: 4.77,
+    reviewsCount: 17,
+    description: "The ultimate lounge-luxury crossover. Sand-washed Japanese silk-cupro creates a liquid movement that drapes effortlessly over dress boots or sneakers.",
+    details: [
+      "60% Cupro, 40% Mulberry Silk",
+      "Elasticated waistband with braided interior cord",
+      "Reinforced pocket openings",
+    ],
+    fit: "Relaxed Tapered",
+    waistType: "Elasticated Drawstring",
+    length: "Cropped Ankle",
+  },
+  {
+    id: "mc-28",
+    name: "Tailored Wool Cropped Cigarette Pant",
+    subtitle: "Super 130s wool pant with clean ankle break and side adjusters",
+    category: "Trousers",
+    clothingType: "Trousers & Tailoring",
+    gender: "Women",
+    price: 340,
+    sizes: ["XS", "S", "M", "L"],
+    colors: [
+      { name: "Charcoal Black", hex: "#1A1D20" },
+      { name: "Obsidian Navy", hex: "#0B1F3A" },
+    ],
+    primaryImage: "https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?auto=format&fit=crop&w=900&q=80",
+    alternateImage: "https://images.unsplash.com/photo-1479064555552-3ef4979f8908?auto=format&fit=crop&w=900&q=80",
+    brand: "MainCharacter Atelier",
+    material: "Tropical Virgin Wool",
+    availability: "In Stock",
+    isNew: true,
+    isFeatured: false,
+    rating: 4.91,
+    reviewsCount: 19,
+    description: "An ankle-length cigarette silhouette with an exacting vertical cut. Hand-finished waistband with horn buckle side tabs for a customized cinch.",
+    details: [
+      "100% Italian Super 130s Wool",
+      "Hand-finished blind hems",
+      "Interior French curtain waistband",
+    ],
+    fit: "Straight Cut",
+    waistType: "Mid-Rise Classic",
+    length: "Cropped Ankle",
+  },
+
+  // ── JEANS (4) ──
+  {
+    id: "mc-03",
+    name: "14oz Okayama Selvedge Denim Trouser",
+    subtitle: "Shuttle-loom woven raw white-line selvedge with architectural wide leg",
+    category: "Jeans",
+    clothingType: "Denim & Jeans",
+    gender: "Men",
+    price: 310,
+    sizes: ["S", "M", "L", "XL", "XXL"],
+    colors: [
+      { name: "Obsidian Navy", hex: "#0B1F3A" },
+      { name: "Charcoal Black", hex: "#1A1D20" },
+    ],
+    primaryImage: "https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=900&q=80",
+    alternateImage: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=900&q=80",
+    brand: "Okayama Denim Guild",
+    material: "14oz Okayama Selvedge Denim",
+    availability: "In Stock",
+    isNew: false,
+    isFeatured: true,
+    isBestSeller: true,
+    badge: "Guild Iconic",
+    rating: 4.9,
+    reviewsCount: 64,
+    description: "Woven at agonizingly low tension on vintage Toyoda shuttle looms in Kojima, this selvedge develops a rich, personalized patina across decades of wear.",
+    details: [
+      "14oz Pure Indigo Rope-Dyed Selvedge Denim",
+      "Custom champagne gold debossed rivets",
+      "Hidden selvedge coin pocket detail",
+      "Mid-high rise with sculptural straight drop",
+    ],
+    fit: "Wide Leg",
+    wash: "Raw Indigo",
+    waist: "High-Rise",
+    rise: "12.5\" High Rise",
+  },
+  {
+    id: "mc-14",
+    name: "Black Sulfur-Dyed Selvedge Straight Cut",
+    subtitle: "13.5oz rope sulfur denim that fades to chalk charcoal with wear",
+    category: "Jeans",
+    clothingType: "Denim & Jeans",
+    gender: "Men",
+    price: 290,
+    sizes: ["S", "M", "L", "XL"],
+    colors: [
+      { name: "Charcoal Black", hex: "#1A1D20" },
+    ],
+    primaryImage: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=900&q=80",
+    alternateImage: "https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=900&q=80",
+    brand: "Okayama Denim Guild",
+    material: "14oz Okayama Selvedge Denim",
+    availability: "In Stock",
+    isNew: false,
+    isFeatured: false,
+    isBestSeller: false,
+    rating: 4.88,
+    reviewsCount: 27,
+    description: "Warp and weft yarn double sulfur-dyed in deep obsidian black. Hand-numbered leather patch debossed with our Tokyo atelier seal.",
+    details: [
+      "13.5oz Black White-Line Selvedge",
+      "Matte black oxide copper doughnut buttons",
+      "Chain-stitched hem on union special 43200G",
+    ],
+    fit: "Straight Cut",
+    wash: "Black Sulfur",
+    waist: "Mid-Rise",
+    rise: "11\" Mid Rise",
+  },
+  {
+    id: "mc-16",
+    name: "Raw Hem Wide-Leg Vintage Wash Denim",
+    subtitle: "Artisan hand-distressed 13oz denim with vintage bleach marbling",
+    category: "Jeans",
+    clothingType: "Denim & Jeans",
+    gender: "Women",
+    price: 330,
+    sizes: ["XS", "S", "M", "L"],
+    colors: [
+      { name: "Obsidian Navy", hex: "#0B1F3A" },
+      { name: "Slate Grey", hex: "#6E757C" },
+    ],
+    primaryImage: "https://images.unsplash.com/photo-1582552938357-32b906df40cb?auto=format&fit=crop&w=900&q=80",
+    alternateImage: "https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=900&q=80",
+    brand: "Okayama Denim Guild",
+    material: "14oz Okayama Selvedge Denim",
+    availability: "In Stock",
+    isNew: true,
+    isFeatured: false,
+    isBestSeller: true,
+    badge: "Hand-Aged",
+    rating: 4.92,
+    reviewsCount: 36,
+    description: "Hand-aged in the wash houses of Kurashiki using volcanic pumice stone washes. Finished with raw frayed hems that settle beautifully over ankle boots.",
+    details: [
+      "13oz Japanese Cotton Selvedge",
+      "Hand-frayed raw hemline with stay-stitch reinforcement",
+      "High-rise with relaxed hip curvature",
+    ],
+    fit: "Wide Leg",
+    wash: "Vintage Stone Wash",
+    waist: "High-Rise",
+    rise: "12.5\" High Rise",
+  },
+  {
+    id: "mc-29",
+    name: "White Ecru Loomstate Selvedge Denim",
+    subtitle: "Unbleached natural cotton with visible cottonseed neps",
+    category: "Jeans",
+    clothingType: "Denim & Jeans",
+    gender: "Unisex",
+    price: 310,
+    sizes: ["S", "M", "L", "XL"],
+    colors: [
+      { name: "Bone Ivory", hex: "#F8F6F1" },
+    ],
+    primaryImage: "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?auto=format&fit=crop&w=900&q=80",
+    alternateImage: "https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=900&q=80",
+    brand: "Okayama Denim Guild",
+    material: "14oz Okayama Selvedge Denim",
+    availability: "Limited Archive",
+    isNew: true,
+    isFeatured: true,
+    badge: "Loomstate Edition",
+    rating: 4.95,
+    reviewsCount: 22,
+    description: "Woven from unbleached natural cotton retaining tiny flecks of cottonseed hull. Sturdy, tactile, and completely chemical-free.",
+    details: [
+      "14oz Unbleached Ecru Selvedge",
+      "Custom brass shank buttons",
+      "Relaxed taper with selvedge outseam",
+    ],
+    fit: "Relaxed Taper",
+    wash: "White Ecru",
+    waist: "High-Rise",
+    rise: "12.5\" High Rise",
+  },
+
+  // ── DRESSES (4) ──
+  {
+    id: "mc-05",
+    name: "Asymmetrical Bias-Cut Silk Crepe Slip Dress",
+    subtitle: "Floor-sweeping bias silk slip with sculptural cross-back strapping",
+    category: "Dresses",
+    clothingType: "Evening & Dresses",
+    gender: "Women",
+    price: 540,
+    originalPrice: 720,
+    discount: 25,
+    sizes: ["XS", "S", "M", "L"],
+    colors: [
+      { name: "Champagne Gold", hex: "#C6A76A" },
+      { name: "Obsidian Navy", hex: "#0B1F3A" },
+      { name: "Wine Burgundy", hex: "#5B1D28" },
+    ],
+    primaryImage: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=900&q=80",
+    alternateImage: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80",
+    brand: "Tokyo Runway Lab",
+    material: "100% Japanese Silk",
+    availability: "In Stock",
+    isNew: false,
+    isFeatured: true,
+    isBestSeller: true,
+    badge: "Privilege Sale -25%",
+    rating: 4.97,
+    reviewsCount: 45,
+    description: "An icon of nocturnal poise. Pure mulberry silk crepe cut on the 45-degree bias hugs the natural contours of the body with zero rigidity.",
+    details: [
+      "100% Heavy Mulberry Silk Crepe de Chine",
+      "Hand-rolled hems and micro-strapping",
+      "Floor-length pooling hem with side slash",
+    ],
+    dressLength: "Floor Length",
+    silhouette: "Bias-Cut Slip",
+    occasion: "Evening Gala",
+  },
+  {
+    id: "mc-09",
+    name: "Structured Ribbed Cashmere Midi Dress",
+    subtitle: "Architectural mockneck midi knitted in 100% Mongolian cashmere",
+    category: "Dresses",
+    clothingType: "Evening & Dresses",
+    gender: "Women",
+    price: 680,
+    sizes: ["XS", "S", "M", "L"],
+    colors: [
+      { name: "Bone Ivory", hex: "#F8F6F1" },
+      { name: "Camel Tan", hex: "#A87B51" },
+      { name: "Charcoal Black", hex: "#1A1D20" },
+    ],
+    primaryImage: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=900&q=80",
+    alternateImage: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80",
+    brand: "Bespoke Cashmere",
+    material: "Double-Faced Cashmere",
+    availability: "Limited Archive",
+    isNew: false,
+    isFeatured: false,
+    isBestSeller: false,
+    rating: 4.91,
+    reviewsCount: 23,
+    description: "Knitted on Japanese Shima Seiki computerized flatbed machines with zero wastage. The ribbed structure compresses and contours gracefully.",
+    details: [
+      "100% Mongolian Cashmere, 2-Ply 12-Gauge",
+      "Elegant mockneck and subtle back kick-pleat",
+      "Includes protective cedar storage chest",
+    ],
+    dressLength: "Midi",
+    silhouette: "Column Gown",
+    occasion: "Cocktail Soirée",
+  },
+  {
+    id: "mc-20",
+    name: "Double-Breasted Tailored Wool Blazer Dress",
+    subtitle: "Sculptural suiting blazer dress with champagne satin lapel facing",
+    category: "Dresses",
+    clothingType: "Evening & Dresses",
+    gender: "Women",
+    price: 720,
+    sizes: ["XS", "S", "M", "L"],
+    colors: [
+      { name: "Obsidian Navy", hex: "#0B1F3A" },
+      { name: "Charcoal Black", hex: "#1A1D20" },
+    ],
+    primaryImage: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=900&q=80",
+    alternateImage: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=900&q=80",
+    brand: "MainCharacter Atelier",
+    material: "Tropical Virgin Wool",
+    availability: "In Stock",
+    isNew: true,
+    isFeatured: true,
+    badge: "Runway Spotlight",
+    rating: 4.96,
+    reviewsCount: 30,
+    description: "Powerful feminine architecture. Combines a sharp pagoda shoulder with a nipped waist and satin peak lapels. Can be worn as an evening dress or over trousers.",
+    details: [
+      "100% English Super 140s Wool with Italian Silk Satin accents",
+      "Genuine horn double-breasted buttons",
+      "Fully canvassed chest with hand-padded lapels",
+    ],
+    dressLength: "Midi",
+    silhouette: "Blazer Dress",
+    occasion: "Gallery Opening",
+  },
+  {
+    id: "mc-30",
+    name: "Sculptural Draped Silk Halter Evening Gown",
+    subtitle: "Floor-length Habotai silk evening gown with backless crossover sash",
+    category: "Dresses",
+    clothingType: "Evening & Dresses",
+    gender: "Women",
+    price: 840,
+    sizes: ["XS", "S", "M", "L"],
+    colors: [
+      { name: "Obsidian Navy", hex: "#0B1F3A" },
+      { name: "Champagne Gold", hex: "#C6A76A" },
+    ],
+    primaryImage: "https://images.unsplash.com/photo-1566174053879-31528523f8ae?auto=format&fit=crop&w=900&q=80",
+    alternateImage: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80",
+    brand: "Tokyo Runway Lab",
+    material: "100% Japanese Silk",
+    availability: "Limited Archive",
+    isNew: true,
+    isFeatured: true,
+    badge: "Haute Couture",
+    rating: 4.98,
+    reviewsCount: 14,
+    description: "Floor-length evening drama with an organic cowl halter that turns into sweeping ribbons trailing behind the silhouette.",
+    details: [
+      "100% Japanese Habotai Silk Crepe",
+      "Concealed side zipper with hook-and-eye closure",
+      "Sweeping chapel-length mini train",
+    ],
+    dressLength: "Floor Length",
+    silhouette: "Architectural Wrap",
+    occasion: "Evening Gala",
+  },
+
+  // ── ACCESSORIES (4) ──
+  {
+    id: "mc-17",
+    name: "Italian Full-Grain Leather Atelier Tote",
+    subtitle: "Unlined vegetable-tanned bridle leather with hand-stitched handles",
+    category: "Accessories",
+    clothingType: "Leather Goods",
+    gender: "Unisex",
+    price: 490,
+    sizes: ["M"],
+    colors: [
+      { name: "Camel Tan", hex: "#A87B51" },
+      { name: "Charcoal Black", hex: "#1A1D20" },
+      { name: "Obsidian Navy", hex: "#0B1F3A" },
+    ],
+    primaryImage: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=900&q=80",
+    alternateImage: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=900&q=80",
+    brand: "MainCharacter Atelier",
+    material: "Italian Full-Grain Leather",
+    availability: "In Stock",
+    isNew: false,
+    isFeatured: true,
+    isBestSeller: true,
+    badge: "Core Essential",
+    rating: 4.94,
+    reviewsCount: 48,
+    description: "Cut from 3.5mm thick vegetable-tanned leather from Tuscany. Assembled with waxed sailmaker thread using traditional double-needle saddle stitching.",
+    details: [
+      "Full-Grain Tuscan Bridle Calfskin",
+      "Solid cast champagne gold hardware",
+      "Includes removable zip pouch and dust bag",
+    ],
+  },
+  {
+    id: "mc-18",
+    name: "Solid Brass & Obsidian Signet Ring",
+    subtitle: "Heavyweight lost-wax cast ring with natural volcanic glass inset",
+    category: "Accessories",
+    clothingType: "Jewellery & Objects",
+    gender: "Unisex",
+    price: 180,
+    sizes: ["S", "M", "L"],
+    colors: [
+      { name: "Champagne Gold", hex: "#C6A76A" },
+      { name: "Charcoal Black", hex: "#1A1D20" },
+    ],
+    primaryImage: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=900&q=80",
+    alternateImage: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=900&q=80",
+    brand: "Protagonist Core",
+    material: "Italian Full-Grain Leather",
+    availability: "In Stock",
+    isNew: true,
+    isFeatured: false,
+    isBestSeller: false,
+    badge: "New Arrival",
+    rating: 4.88,
+    reviewsCount: 33,
+    description: "Lost-wax cast in solid jewelers brass and finished with a brushed champagne patina. Set with a cabochon-cut natural black obsidian stone from Hokkaido.",
+    details: [
+      "Solid Jeweler Brass, 24k Champagne Gold plating",
+      "Natural Hokkaido Obsidian stone",
+      "Engraved internal atelier hallmark",
+    ],
+  },
+  {
+    id: "mc-19",
+    name: "Ultra-Fine Cashmere Ribbed Scarf",
+    subtitle: "Whisper-weight Mongolian cashmere with raw feathered fringe",
+    category: "Accessories",
+    clothingType: "Knitwear & Accessories",
+    gender: "Unisex",
+    price: 210,
+    sizes: ["M"],
+    colors: [
+      { name: "Camel Tan", hex: "#A87B51" },
+      { name: "Obsidian Navy", hex: "#0B1F3A" },
+      { name: "Bone Ivory", hex: "#F8F6F1" },
+    ],
+    primaryImage: "https://images.unsplash.com/photo-1520903920243-00d872a2d1c9?auto=format&fit=crop&w=900&q=80",
+    alternateImage: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=900&q=80",
+    brand: "Bespoke Cashmere",
+    material: "Double-Faced Cashmere",
+    availability: "In Stock",
+    isNew: false,
+    isFeatured: false,
+    isBestSeller: true,
+    rating: 4.96,
+    reviewsCount: 41,
+    description: "Generously sized at 200 x 70 cm for versatile styling. Loosely woven from grade-A Mongolian cashmere yarns for supreme thermal loft with zero weight.",
+    details: [
+      "100% Grade-A Mongolian Cashmere",
+      "Dimensions: 200 cm x 70 cm",
+      "Delicate hand-frayed raw fringe edges",
+    ],
+  },
+  {
+    id: "mc-24",
+    name: "Hand-Burnished Bridle Leather Belt",
+    subtitle: "English bridle leather with custom champagne brass buckle",
+    category: "Accessories",
+    clothingType: "Leather Goods",
+    gender: "Unisex",
+    price: 160,
+    sizes: ["S", "M", "L", "XL"],
+    colors: [
+      { name: "Charcoal Black", hex: "#1A1D20" },
+      { name: "Camel Tan", hex: "#A87B51" },
+    ],
+    primaryImage: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=900&q=80",
+    alternateImage: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=900&q=80",
+    brand: "MainCharacter Atelier",
+    material: "Italian Full-Grain Leather",
+    availability: "In Stock",
+    isNew: false,
+    isFeatured: false,
+    isBestSeller: false,
+    rating: 4.89,
+    reviewsCount: 29,
+    description: "4cm wide bridle leather cut from the prime bend. The edges are beveled and hand-burnished with natural beeswax for a glassy, durable finish.",
+    details: [
+      "English Bridle Leather, 4mm thickness",
+      "Solid brass buckle with brushed champagne finish",
+      "Hand-burnished edges using Japanese beeswax",
+    ],
+  },
+];

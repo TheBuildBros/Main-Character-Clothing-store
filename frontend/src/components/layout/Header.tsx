@@ -24,8 +24,8 @@ export default function Header() {
 
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const user = useAuthStore((s) => s.user);
-  const cartItemCount = useCartStore((s) => s.getTotalItems());
-  const wishlistItemCount = useWishlistStore((s) => s.getTotalItems());
+  const cartItemCount = useCartStore((s) => s.items.reduce((total, item) => total + item.quantity, 0));
+  const wishlistItemCount = useWishlistStore((s) => s.itemIds.length);
 
   useEffect(() => {
     setIsMounted(true);
