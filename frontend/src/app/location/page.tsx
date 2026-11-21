@@ -6,44 +6,11 @@ import {
   Phone,
   Mail,
   Navigation,
-  Sparkles,
-  ShieldCheck,
-  Calendar,
 } from "lucide-react";
 
 export default function LocationPage() {
   return (
     <main className="min-h-screen bg-[#F8F6F1] text-[#20242B]">
-      {/* Editorial Header Banner */}
-      <section className="relative bg-[#0B1F3A] text-[#F8F6F1] py-20 sm:py-28 px-5 sm:px-8 border-b border-[#C6A76A]/15">
-        <div className="max-w-6xl mx-auto text-center space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 border border-[#C6A76A]/40 text-[#C6A76A] text-[9px] uppercase tracking-[0.35em] font-medium bg-[#C6A76A]/10">
-            <Sparkles className="h-3 w-3" />
-            <span>Flagship Maison</span>
-          </div>
-
-          <h1
-            className="text-4xl sm:text-6xl text-[#F8F6F1]"
-            style={{
-              fontFamily: "'Cormorant Garamond', Georgia, serif",
-              fontWeight: 600,
-              fontStyle: "italic",
-            }}
-          >
-            主人公 <span className="text-[#C6A76A] font-normal not-italic">Tokyo Flagship</span>
-          </h1>
-
-          <p
-            className="max-w-xl mx-auto text-sm sm:text-base text-[#F8F6F1]/60 leading-relaxed font-light"
-            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
-          >
-            Immerse yourself in our architectural flagship space. Discover
-            limited runway archives, protagonist capsule collections, and bespoke
-            styling appointments.
-          </p>
-        </div>
-      </section>
-
       {/* Main Content Grid */}
       <div className="max-w-6xl mx-auto px-5 sm:px-8 py-14 sm:py-20">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
@@ -124,41 +91,6 @@ export default function LocationPage() {
                     <span>concierge@maincharacter.jp</span>
                   </p>
                 </div>
-              </div>
-
-              {/* Store Services */}
-              <div className="pt-4 border-t border-[#20242B]/[0.08] space-y-2.5">
-                <span className="text-[9px] uppercase tracking-[0.3em] font-semibold text-[#0B1F3A] block">
-                  Atelier Services
-                </span>
-                <ul className="text-xs text-[#20242B]/75 space-y-2 font-light">
-                  <li className="flex items-center gap-2">
-                    <ShieldCheck className="h-3.5 w-3.5 text-[#C6A76A]" strokeWidth={1.5} />
-                    <span>Private Styling & Archive Consultation</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <ShieldCheck className="h-3.5 w-3.5 text-[#C6A76A]" strokeWidth={1.5} />
-                    <span>Online Order Pickup & Express Alterations</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <ShieldCheck className="h-3.5 w-3.5 text-[#C6A76A]" strokeWidth={1.5} />
-                    <span>VIP Member Exclusive Drop Vault Access</span>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={() =>
-                    alert("Appointment booking concierge — private appointment request registered.")
-                  }
-                  className="w-full flex items-center justify-center gap-2 py-3.5 px-6 bg-[#0B1F3A] text-[#C6A76A] text-[10px] uppercase tracking-[0.28em] font-semibold hover:bg-[#C6A76A] hover:text-[#0B1F3A] transition-all duration-300 border border-[#0B1F3A]"
-                >
-                  <Calendar className="h-3.5 w-3.5" strokeWidth={1.5} />
-                  <span>Book Private Consultation</span>
-                </button>
               </div>
             </div>
           </div>
