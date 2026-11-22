@@ -35,9 +35,9 @@ Deliver a responsive apparel storefront built in the initialized React/Vite appl
 
 **Brand Voice:** short, assured, human. Examples: “Wear the point of view.” “New pieces. No second thoughts.”
 
-**Wordmark & Logo:** typeset MAIN CHARACTER in bold uppercase with tight tracking and a fine electric-blue underline/marker; no generated text logo.
+**Wordmark & Logo:** use the owner-supplied Japanese character/silhouette logo image in the header and footer instead of a typed MAIN CHARACTER wordmark; show the supplied GLB coin logo rotating slowly above the hero title with a transparent canvas and a mobile-safe footprint.
 
 **Signature Brand Color:** Electric Blue `#1E6BFF`.
 
 ## Runtime and dependencies
-Use the initialized web-db-user React/Vite starter in static mode: this scoped prototype needs no database/server since no production auth, commerce APIs, or private data are requested. Use existing `lucide-react` icons and browser APIs; do not add dependencies. Include campaign image resources through the returned project-managed storage URLs. Declare `pnpm dev:static` on port 3000 via Webdev runtime config; route manifest must be served from `public/manus-routes.json`.
+Use the initialized web-db-user React/Vite starter in static mode: this scoped prototype needs no database/server since no production auth, commerce APIs, or private data are requested. Keep fashion and campaign images bundled under `client/public/images` so local runs do not depend on remote image hosts. Use official React Bits `AnimatedContent`, `TiltedCard`, and `BlurText` source components for scroll reveal, product-image pointer tilt, and collection-heading reveal; respect reduced-motion preferences and keep touch interactions responsive. Existing `gsap`, `motion`, `lucide-react`, and browser APIs are used. Declare `pnpm dev:static` on port 3000 via Webdev runtime config; route manifest must be served from `public/manus-routes.json`.

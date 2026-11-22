@@ -30,7 +30,7 @@ export default function Account() {
   };
 
   return <div className="account-page">
-    <div className="account-aside"><span className="eyebrow">MAIN CHARACTER ENERGY</span><h1>Your story.<br /><em>Your wardrobe.</em></h1><p>Save the pieces you love and find your way back when you're ready.</p><span className="account-aside-note">MC / PERSONAL EDIT</span></div>
+    <div className="account-aside"><span className="eyebrow">主人公のムード</span><h1>Your story.<br /><em>Your wardrobe.</em></h1><p>Save the pieces you love and find your way back when you're ready.</p><span className="account-aside-note">MC / PERSONAL EDIT</span></div>
     <div className="account-panel"><div className="breadcrumbs">HOME <span>/</span> YOUR ACCOUNT</div><div className="account-card">
       <div className="account-mark"><UserRound size={20} /></div><span className="eyebrow">YOUR SPACE, YOUR PACE</span><h2>{mode === "signin" ? "Good to see you." : "Make it yours."}</h2><p className="account-intro">{mode === "signin" ? "Pick up where your good taste left off." : "A little profile. A lot of point of view."}</p>
       <div className="guest-state" role="status"><span className="guest-state-dot" /> GUEST PREVIEW <span>You're not signed in. Account access needs a connected service.</span></div>
