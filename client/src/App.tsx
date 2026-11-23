@@ -14,6 +14,8 @@ function Router() {
   return <StoreLayout><Switch>
     <Route path="/" component={Home} />
     <Route path="/collections" component={Collections} />
+    <Route path="/shop/:category" component={Collections} />
+    <Route path="/limited/:tag" component={Collections} />
     <Route path="/bag" component={Bag} />
     <Route path="/account" component={Account} />
     <Route path="/product/:id" component={Product} />
