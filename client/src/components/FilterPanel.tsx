@@ -25,15 +25,24 @@ export const colors = [
 export const PRICE_MIN = 1500;
 export const PRICE_MAX = 12000;
 
+export const sortOptions = [
+  { value: "featured", label: "Featured" },
+  { value: "new", label: "New in" },
+  { value: "price-low", label: "Price: low to high" },
+  { value: "price-high", label: "Price: high to low" },
+];
+
 export interface FilterPanelProps {
   category: string;
   size: string;
   color: string;
   maxPrice: number;
+  sort?: string;
   onCategoryChange: (category: string) => void;
   onSizeChange: (size: string) => void;
   onColorChange: (color: string) => void;
   onPriceChange: (maxPrice: number) => void;
+  onSortChange?: (sort: string) => void;
   onClear: () => void;
   onClose?: () => void;
   onApply?: () => void;
@@ -73,10 +82,12 @@ export function FilterPanel({
   size,
   color,
   maxPrice,
+  sort = "featured",
   onCategoryChange,
   onSizeChange,
   onColorChange,
   onPriceChange,
+  onSortChange,
   onClear,
   onClose,
   onApply,
@@ -86,6 +97,36 @@ export function FilterPanel({
   if (isDrawer) {
     return (
       <div className="space-y-4 text-xs">
+        {/* Sort */}
+        <div className="filter-group space-y-2">
+          <h3 className="text-[11px] font-bold tracking-widest uppercase text-muted-foreground">
+            Sort by
+          </h3>
+          <div className="flex flex-wrap gap-1.5">
+            {sortOptions.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                className={`filter-chip text-[10px] px-2.5 py-1 rounded-sm border transition-colors ${
+                  sort === opt.value
+                    ? "bg-[#1e6bff] border-[#1e6bff] text-white"
+                    : "border-black/10 dark:border-white/10 text-foreground hover:border-[#1e6bff]"
+                }`}
+                onClick={() =>
+                  onSortChange?.(
+                    sort === opt.value && opt.value !== "featured"
+                      ? "featured"
+                      : opt.value
+                  )
+                }
+              >
+                <span>{opt.label}</span>
+                {sort === opt.value && <Check size={11} className="ml-1" />}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Category */}
         <div className="filter-group space-y-2">
           <h3 className="text-[11px] font-bold tracking-widest uppercase text-muted-foreground">
@@ -235,6 +276,30 @@ export function FilterPanel({
       </div>
 
       <div className="filter-groups">
+        {/* Sort */}
+        <div className="filter-group">
+          <h3>Sort by</h3>
+          <div className="filter-options">
+            {sortOptions.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                className={`filter-chip ${sort === opt.value ? "selected" : ""}`}
+                onClick={() =>
+                  onSortChange?.(
+                    sort === opt.value && opt.value !== "featured"
+                      ? "featured"
+                      : opt.value
+                  )
+                }
+              >
+                {opt.label}
+                {sort === opt.value && <Check size={13} />}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Category */}
         <div className="filter-group">
           <h3>Category</h3>

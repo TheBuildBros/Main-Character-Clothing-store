@@ -29,6 +29,7 @@ export function MobileDrawer({ isOpen, onClose, brandWordmark = "主人公" }: M
   const [drawerSize, setDrawerSize] = useState("");
   const [drawerColor, setDrawerColor] = useState("");
   const [drawerMaxPrice, setDrawerMaxPrice] = useState(PRICE_MAX);
+  const [drawerSort, setDrawerSort] = useState("featured");
 
   // Sync filters from URL parameters when drawer opens or location changes
   useEffect(() => {
@@ -42,6 +43,7 @@ export function MobileDrawer({ isOpen, onClose, brandWordmark = "主人公" }: M
           : p.get("color") || ""
       );
       setDrawerMaxPrice(p.get("price") ? Number(p.get("price")) : PRICE_MAX);
+      setDrawerSort(p.get("sort") || "featured");
     }
   }, [isOpen, location]);
 
@@ -94,18 +96,21 @@ export function MobileDrawer({ isOpen, onClose, brandWordmark = "主人公" }: M
     size?: string;
     color?: string;
     maxPrice?: number;
+    sort?: string;
   }) => {
     const updated = {
       category: newFilters.category !== undefined ? newFilters.category : drawerCategory,
       size: newFilters.size !== undefined ? newFilters.size : drawerSize,
       color: newFilters.color !== undefined ? newFilters.color : drawerColor,
       maxPrice: newFilters.maxPrice !== undefined ? newFilters.maxPrice : drawerMaxPrice,
+      sort: newFilters.sort !== undefined ? newFilters.sort : drawerSort,
     };
 
     if (newFilters.category !== undefined) setDrawerCategory(newFilters.category);
     if (newFilters.size !== undefined) setDrawerSize(newFilters.size);
     if (newFilters.color !== undefined) setDrawerColor(newFilters.color);
     if (newFilters.maxPrice !== undefined) setDrawerMaxPrice(newFilters.maxPrice);
+    if (newFilters.sort !== undefined) setDrawerSort(newFilters.sort);
 
     const target = buildFilterUrl(updated);
     onClose();
@@ -121,6 +126,7 @@ export function MobileDrawer({ isOpen, onClose, brandWordmark = "主人公" }: M
     setDrawerSize("");
     setDrawerColor("");
     setDrawerMaxPrice(PRICE_MAX);
+    setDrawerSort("featured");
     onClose();
     if (location === "/collections") {
       window.location.assign("/collections");
@@ -133,7 +139,8 @@ export function MobileDrawer({ isOpen, onClose, brandWordmark = "主人公" }: M
     Number(Boolean(drawerCategory)) +
     Number(Boolean(drawerSize)) +
     Number(Boolean(drawerColor)) +
-    Number(drawerMaxPrice < PRICE_MAX);
+    Number(drawerMaxPrice < PRICE_MAX) +
+    Number(drawerSort !== "featured");
 
   const homeConfig = NAV_CONFIG.find((item) => item.id === "home");
   const essentialsConfig = NAV_CONFIG.find((item) => item.id === "essentials");
@@ -364,10 +371,12 @@ export function MobileDrawer({ isOpen, onClose, brandWordmark = "主人公" }: M
                         size={drawerSize}
                         color={drawerColor}
                         maxPrice={drawerMaxPrice}
+                        sort={drawerSort}
                         onCategoryChange={(val) => applyFiltersAndNavigate({ category: val })}
                         onSizeChange={(val) => applyFiltersAndNavigate({ size: val })}
                         onColorChange={(val) => applyFiltersAndNavigate({ color: val })}
                         onPriceChange={(val) => setDrawerMaxPrice(val)}
+                        onSortChange={(val) => applyFiltersAndNavigate({ sort: val })}
                         onClear={handleClearFilters}
                         onApply={() => applyFiltersAndNavigate({})}
                       />

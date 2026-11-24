@@ -63,7 +63,7 @@ export function Navbar({ className = "", brandWordmark = "主人公" }: NavbarPr
             : "h-[68px] bg-white/90 dark:bg-[#0b0f1a]/90 backdrop-blur-md border-black/5 dark:border-white/5"
         } ${className}`}
       >
-        <div className="max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-8 grid grid-cols-3 items-center">
+        <div className="w-full h-full px-4 sm:px-6 lg:px-10 grid grid-cols-3 items-center">
           {/* Left: Hamburger Button on all screen sizes */}
           <div className="flex items-center justify-start">
             <button

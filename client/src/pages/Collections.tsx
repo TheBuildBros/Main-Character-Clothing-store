@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowDownUp, ChevronDown, SlidersHorizontal, X } from "lucide-react";
+import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
 import { Link, useLocation, useParams } from "wouter";
 import { ProductCard, products, type Product } from "@/store/Storefront";
-import { FilterPanel, PRICE_MAX } from "@/components/FilterPanel";
+import { FilterPanel, PRICE_MAX, sortOptions } from "@/components/FilterPanel";
 
 function matchCategorySlug(slug: string, product: Product): boolean {
   const s = slug.toLowerCase();
@@ -73,6 +73,7 @@ export default function Collections() {
     if (currentParams.has("color")) setColor(currentParams.get("color") === "electric" ? "Electric blue" : (currentParams.get("color") || ""));
     if (currentParams.has("price")) setMaxPrice(Number(currentParams.get("price")) || PRICE_MAX);
     if (currentParams.has("q")) setQuery(currentParams.get("q") || "");
+    if (currentParams.has("sort")) setSort(currentParams.get("sort") || "featured");
   }, [location]);
 
   const showLoadingBriefly = () => {
@@ -137,6 +138,7 @@ export default function Collections() {
     setColor("");
     setMaxPrice(PRICE_MAX);
     setQuery("");
+    setSort("featured");
     navigate("/collections");
   };
 
@@ -144,7 +146,8 @@ export default function Collections() {
     Number(Boolean(category)) +
     Number(Boolean(size)) +
     Number(Boolean(color)) +
-    Number(maxPrice < PRICE_MAX);
+    Number(maxPrice < PRICE_MAX) +
+    Number(sort !== "featured");
 
   const getIntroDetails = () => {
     if (routeCategorySlug) {
@@ -193,29 +196,7 @@ export default function Collections() {
           {activeCount > 0 && <span className="filter-count">{activeCount}</span>}
           <ChevronDown size={14} />
         </button>
-        <label className="catalog-search">
-          <input
-            placeholder="Find your piece"
-            value={query}
-            onChange={(event) => changed(setQuery, event.target.value)}
-            aria-label="Search products"
-          />
-          <span>⌕</span>
-        </label>
-        <span className="catalog-count">{filtered.length} PIECES</span>
-        <label className="sort-select">
-          <ArrowDownUp size={14} />
-          <select
-            value={sort}
-            onChange={(event) => setSort(event.target.value)}
-            aria-label="Sort products"
-          >
-            <option value="featured">Featured</option>
-            <option value="new">New in</option>
-            <option value="price-low">Price: low to high</option>
-            <option value="price-high">Price: high to low</option>
-          </select>
-        </label>
+        <span className="catalog-count ml-auto">{filtered.length} PIECES</span>
       </div>
 
       {filtersOpen && (
@@ -224,6 +205,7 @@ export default function Collections() {
           size={size}
           color={color}
           maxPrice={maxPrice}
+          sort={sort}
           onCategoryChange={(val) => changed(setCategory, val)}
           onSizeChange={(val) => changed(setSize, val)}
           onColorChange={(val) => changed(setColor, val)}
@@ -231,6 +213,7 @@ export default function Collections() {
             setMaxPrice(val);
             showLoadingBriefly();
           }}
+          onSortChange={(val) => changed(setSort, val)}
           onClear={clear}
           onClose={() => setFiltersOpen(false)}
           totalPieces={filtered.length}
@@ -238,12 +221,23 @@ export default function Collections() {
       )}
 
       <div className="active-filters">
+        {sort && sort !== "featured" && (
+          <button onClick={() => changed(setSort, "featured")}>
+            Sort: {sortOptions.find((s) => s.value === sort)?.label || sort}
+            <X size={13} />
+          </button>
+        )}
         {category && <button onClick={() => setCategory("")}>{category}<X size={13} /></button>}
         {size && <button onClick={() => setSize("")}>Size {size}<X size={13} /></button>}
         {color && <button onClick={() => setColor("")}>{color}<X size={13} /></button>}
         {maxPrice < PRICE_MAX && (
           <button onClick={() => setMaxPrice(PRICE_MAX)}>
             Up to ₹{maxPrice.toLocaleString("en-IN")}<X size={13} />
+          </button>
+        )}
+        {query && (
+          <button onClick={() => setQuery("")}>
+            Search: "{query}"<X size={13} />
           </button>
         )}
         {(activeCount > 0 || query) && (
