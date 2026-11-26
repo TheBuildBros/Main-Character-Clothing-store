@@ -1,72 +1,48 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { AlertCircle, Home } from "lucide-react";
+import { ArrowLeft, Compass } from "lucide-react";
 import { useEffect } from "react";
-import { useLocation } from "wouter";
+import { Link } from "wouter";
 
-// Hosting answers this path with HTTP 404 while still serving the app.
 const NOT_FOUND_PATH = "/404";
 
-// Render for unknown routes and for items the server confirmed missing (e.g. `/page/:id`).
-// The redirect is irreversible: never render while loading, on other errors, or before auth resolves.
 export default function NotFound() {
-  const [, setLocation] = useLocation();
-
   useEffect(() => {
     const robots = document.createElement("meta");
     robots.name = "robots";
     robots.content = "noindex";
     document.head.appendChild(robots);
 
-    // Full-page navigation: a client-side route change sends no request, so no 404 status.
     if (window.location.pathname.replace(/\/$/, "") !== NOT_FOUND_PATH) {
       window.location.replace(NOT_FOUND_PATH);
     }
 
-    return () => robots.remove();
+    return () => {
+      robots.remove();
+    };
   }, []);
 
-  const handleGoHome = () => {
-    setLocation("/");
-  };
-
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
-      <Card className="w-full max-w-lg mx-4 shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-        <CardContent className="pt-8 pb-8 text-center">
-          <div className="flex justify-center mb-6">
-            <div className="relative">
-              <div className="absolute inset-0 bg-red-100 rounded-full animate-pulse" />
-              <AlertCircle className="relative h-16 w-16 text-red-500" />
-            </div>
-          </div>
-
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">404</h1>
-
-          <h2 className="text-xl font-semibold text-slate-700 mb-4">
-            Page Not Found
-          </h2>
-
-          <p className="text-slate-600 mb-8 leading-relaxed">
-            Sorry, the page you are looking for doesn't exist.
-            <br />
-            It may have been moved or deleted.
-          </p>
-
-          <div
-            id="not-found-button-group"
-            className="flex flex-col sm:flex-row gap-3 justify-center"
-          >
-            <Button
-              onClick={handleGoHome}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
-            >
-              <Home className="w-4 h-4 mr-2" />
-              Go Home
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+    <div className="catalog-page max-w-3xl mx-auto py-16 sm:py-24">
+      <div className="glass-card px-6 sm:px-12 py-14 text-center space-y-5">
+        <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-[#0047ff] to-[#00aeff] text-white flex items-center justify-center shadow-[0_12px_28px_rgba(0,87,255,0.35)]">
+          <Compass size={28} />
+        </div>
+        <span className="eyebrow">ERROR 404 · OUT OF FRAME</span>
+        <h1 className="font-display text-4xl sm:text-6xl font-bold tracking-tight">
+          Page not found<span className="blue-period">.</span>
+        </h1>
+        <p className="text-sm text-[var(--muted)] max-w-md mx-auto leading-relaxed">
+          The page you are looking for has moved or no longer exists.
+        </p>
+        <div className="pt-3 flex flex-wrap items-center justify-center gap-3">
+          <Link href="/" className="button-primary">
+            <ArrowLeft size={15} />
+            <span>Back to Home</span>
+          </Link>
+          <Link href="/collections" className="text-link px-4">
+            Browse all pieces
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

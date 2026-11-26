@@ -81,11 +81,7 @@ export function MobileDrawer({ isOpen, onClose, brandWordmark = "主人公" }: M
     if (searchQuery.trim()) {
       const target = `/collections?q=${encodeURIComponent(searchQuery.trim())}`;
       onClose();
-      if (location === "/collections") {
-        window.location.assign(target);
-      } else {
-        navigate(target);
-      }
+      navigate(target);
       setSearchQuery("");
     }
   };
@@ -114,11 +110,7 @@ export function MobileDrawer({ isOpen, onClose, brandWordmark = "主人公" }: M
 
     const target = buildFilterUrl(updated);
     onClose();
-    if (location === "/collections") {
-      window.location.assign(target);
-    } else {
-      navigate(target);
-    }
+    navigate(target);
   };
 
   const handleClearFilters = () => {
@@ -128,11 +120,7 @@ export function MobileDrawer({ isOpen, onClose, brandWordmark = "主人公" }: M
     setDrawerMaxPrice(PRICE_MAX);
     setDrawerSort("featured");
     onClose();
-    if (location === "/collections") {
-      window.location.assign("/collections");
-    } else {
-      navigate("/collections");
-    }
+    navigate("/collections");
   };
 
   const activeFilterCount =
@@ -171,7 +159,7 @@ export function MobileDrawer({ isOpen, onClose, brandWordmark = "主人公" }: M
             animate={shouldReduceMotion ? { opacity: 1 } : { x: "0%" }}
             exit={shouldReduceMotion ? { opacity: 0 } : { x: "-100%" }}
             transition={{ duration: shouldReduceMotion ? 0.05 : 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed top-0 left-0 bottom-0 w-[85%] max-w-sm bg-white dark:bg-[#0b0f1a] text-foreground border-r border-black/10 dark:border-white/10 shadow-2xl flex flex-col justify-between overflow-y-auto"
+            className="fixed top-0 left-0 bottom-0 w-[86%] max-w-sm bg-white/90 dark:bg-[#051029]/92 backdrop-blur-2xl text-foreground border-r border-[#0057ff]/18 shadow-[0_24px_60px_rgba(0,87,255,0.18)] flex flex-col justify-between overflow-y-auto"
           >
             {/* Top Section */}
             <div>

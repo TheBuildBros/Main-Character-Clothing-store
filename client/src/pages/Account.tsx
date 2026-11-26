@@ -3,17 +3,22 @@ import { ArrowRight, Check, Eye, EyeOff, UserRound } from "lucide-react";
 import { Link } from "wouter";
 import { trpc } from "@/lib/trpc";
 
+function getCleanErrorMessage(err: unknown, fallback: string): string {
+  const raw =
+    err && typeof err === "object" && "message" in err && typeof (err as { message?: unknown }).message === "string"
+      ? (err as { message: string }).message
+      : "";
+  const firstLine = raw.split("\n")[0]?.trim();
+  if (!firstLine || /^\s*at\s+/i.test(firstLine)) {
+    return fallback;
+  }
+  return firstLine;
+}
+
 export default function Account() {
   const utils = trpc.useUtils();
   const meQuery = trpc.auth.me.useQuery();
   const user = meQuery.data;
-
-  const loginMutation = trpc.auth.login.useMutation();
-  const requestSignupOtpMutation = trpc.auth.requestSignupOtp.useMutation();
-  const registerMutation = trpc.auth.register.useMutation();
-  const requestPasswordResetMutation = trpc.auth.requestPasswordReset.useMutation();
-  const resetPasswordMutation = trpc.auth.resetPassword.useMutation();
-  const logoutMutation = trpc.auth.logout.useMutation();
 
   const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [signupStep, setSignupStep] = useState<"form" | "otp">("form");
@@ -23,6 +28,7 @@ export default function Account() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [success, setSuccess] = useState("");
   const [serverError, setServerError] = useState("");
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   // Form field states
   const [name, setName] = useState("");
@@ -52,10 +58,78 @@ export default function Account() {
   }>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
 
+  const loginMutation = trpc.auth.login.useMutation();
+  const requestSignupOtpMutation = trpc.auth.requestSignupOtp.useMutation({
+    onSuccess: () => {
+      const wasOnOtpStep = mode === "signup" && signupStep === "otp";
+      setMode("signup");
+      setSignupStep("otp");
+      setOtp("");
+      setErrors({});
+      setTouched({});
+      setIsSubmitted(false);
+      setServerError("");
+      setResendCooldown(60);
+      setSuccess(
+        wasOnOtpStep ? `New verification code sent to ${email.trim()}.` : ""
+      );
+    },
+    onError: (err) => {
+      setServerError(getCleanErrorMessage(err, "Unable to send verification code."));
+    },
+  });
+  const registerMutation = trpc.auth.register.useMutation({
+    onSuccess: async () => {
+      await utils.auth.me.invalidate();
+      setPassword("");
+      setConfirmPassword("");
+      setOtp("");
+      setErrors({});
+      setTouched({});
+      setIsSubmitted(false);
+      setServerError("");
+      setSuccess("");
+      setResendCooldown(0);
+      setSignupStep("form");
+    },
+    onError: (err) => {
+      setServerError(getCleanErrorMessage(err, "Registration failed. Please check your code."));
+    },
+  });
+  const requestPasswordResetMutation = trpc.auth.requestPasswordReset.useMutation();
+  const resetPasswordMutation = trpc.auth.resetPassword.useMutation();
+  const logoutMutation = trpc.auth.logout.useMutation();
+
   // Requirement: Reset scroll position to top on page mount
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, []);
+
+  // Resend OTP 60s countdown
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = window.setInterval(() => {
+      setResendCooldown((prev) => (prev <= 1 ? 0 : prev - 1));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [resendCooldown]);
+
+  // Focus OTP input when transitioning to the signup OTP screen
+  useEffect(() => {
+    if (mode === "signup" && signupStep === "otp") {
+      window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+      const timer = window.setTimeout(() => {
+        document.getElementById("account-otp")?.focus();
+      }, 50);
+      return () => window.clearTimeout(timer);
+    }
+  }, [mode, signupStep]);
+
+  const formatPhoneForSubmit = () => {
+    const cleanedDigits = phone.replace(/[\s\-()[\]]/g, "");
+    const cleanedPrefix = countryCode.replace(/\s+/g, "");
+    return cleanedDigits ? `${cleanedPrefix}${cleanedDigits}` : undefined;
+  };
 
   // Validation helper
   const validateField = (
@@ -65,8 +139,9 @@ export default function Account() {
   ): string => {
     const value = val.trim();
     if (field === "name") {
-      if (mode === "signup" && signupStep === "form" && !value) {
-        return "Add your name to create a profile.";
+      if (mode === "signup" && signupStep === "form") {
+        if (!value) return "Add your name to create a profile.";
+        if (value.length < 2) return "Name must be at least 2 characters.";
       }
     }
     if (field === "email") {
@@ -77,7 +152,7 @@ export default function Account() {
     }
     if (field === "phone") {
       if (mode === "signup" && value) {
-        const digits = value.replace(/[\s-]/g, "");
+        const digits = value.replace(/[\s\-()[\]]/g, "");
         if (countryCode === "+91") {
           if (!/^[6-9]\d{9}$/.test(digits)) {
             return "Enter a valid 10-digit mobile number.";
@@ -106,8 +181,9 @@ export default function Account() {
       }
     }
     if (field === "otp") {
-      if (!val) return "Enter the 6-digit code.";
-      if (!/^\d{6}$/.test(val.trim())) return "Code must be 6 digits.";
+      if (!val || !/^\d{6}$/.test(val.trim())) {
+        return "Enter the 6-digit code";
+      }
     }
     return "";
   };
@@ -151,10 +227,16 @@ export default function Account() {
       }
     }
     if (field === "confirmPassword") setConfirmPassword(value);
-    if (field === "otp") setOtp(value.replace(/\D/g, "").slice(0, 6));
+    const sanitizedValue =
+      field === "otp" ? value.replace(/\D/g, "").slice(0, 6) : value;
+    if (field === "otp") setOtp(sanitizedValue);
 
     if (touched[field] || isSubmitted) {
-      const err = validateField(field, value, field === "password" ? value : password);
+      const err = validateField(
+        field,
+        sanitizedValue,
+        field === "password" ? value : password
+      );
       setErrors((prev) => ({ ...prev, [field]: err }));
     }
   };
@@ -232,6 +314,7 @@ export default function Account() {
     setPassword("");
     setConfirmPassword("");
     setOtp("");
+    setResendCooldown(0);
     setShowConfirmPassword(false);
   };
 
@@ -315,20 +398,11 @@ export default function Account() {
       return;
     }
 
-    try {
-      await requestSignupOtpMutation.mutateAsync({ email: email.trim() });
-      setSignupStep("otp");
-      setOtp("");
-      setIsSubmitted(false);
-      setTouched({});
-      setSuccess(`We sent a 6-digit code to ${email.trim()}`);
-    } catch (err: any) {
-      setServerError(err.message || "Unable to send verification code.");
-    }
+    requestSignupOtpMutation.mutate({ email: email.trim() });
   };
 
   // 4b. Verify OTP and register
-  const handleSignupOtpSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSignupOtpSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitted(true);
     setServerError("");
@@ -340,37 +414,20 @@ export default function Account() {
       return;
     }
 
-    const cleanedDigits = phone.replace(/[\s-]/g, "");
-    const cleanedPhone = cleanedDigits ? `${countryCode}${cleanedDigits}` : undefined;
-
-    try {
-      await registerMutation.mutateAsync({
-        name: name.trim(),
-        email: email.trim(),
-        phone: cleanedPhone,
-        password,
-        otp: otp.trim(),
-      });
-      await utils.auth.me.invalidate();
-      setPassword("");
-      setConfirmPassword("");
-      setOtp("");
-      setTouched({});
-      setIsSubmitted(false);
-    } catch (err: any) {
-      setServerError(err.message || "Registration failed.");
-    }
+    registerMutation.mutate({
+      name: name.trim(),
+      email: email.trim(),
+      phone: formatPhoneForSubmit(),
+      password,
+      otp: otp.trim(),
+    });
   };
 
-  const handleResendSignupOtp = async () => {
+  const handleResendSignupOtp = () => {
+    if (resendCooldown > 0 || requestSignupOtpMutation.isPending) return;
     setServerError("");
     setSuccess("");
-    try {
-      await requestSignupOtpMutation.mutateAsync({ email: email.trim() });
-      setSuccess(`New verification code sent to ${email.trim()}`);
-    } catch (err: any) {
-      setServerError(err.message || "Failed to resend code.");
-    }
+    requestSignupOtpMutation.mutate({ email: email.trim() });
   };
 
   // 5. Forgot password step 1: request reset
@@ -463,7 +520,12 @@ export default function Account() {
   return (
     <div className="account-page">
       {/* Dark Navy Left Hero Panel (desktop) & Collapsible Banner (mobile) */}
-      <aside className="account-aside" aria-label="Brand narrative">
+      <aside
+        className={`account-aside ${
+          !user && mode === "signup" && signupStep === "otp" ? "hidden md:flex" : ""
+        }`}
+        aria-label="Brand narrative"
+      >
         <div className="account-watermark" aria-hidden="true">
           MC
         </div>
@@ -587,10 +649,13 @@ export default function Account() {
                   : mode === "signin"
                   ? "Good to see you."
                   : signupStep === "otp"
-                  ? "Verify your email."
+                  ? "Verify your email"
                   : "Make it yours."}
               </h2>
-              <p className="account-intro">
+              <p
+                id={mode === "signup" && signupStep === "otp" ? "account-otp-helper" : undefined}
+                className="account-intro"
+              >
                 {mode === "forgot"
                   ? forgotStep === "success"
                     ? "Your password has been changed successfully."
@@ -600,13 +665,13 @@ export default function Account() {
                   : mode === "signin"
                   ? "Pick up where your good taste left off."
                   : signupStep === "otp"
-                  ? `Enter the 6-digit verification code sent to ${email}.`
+                  ? `Enter the 6-digit code sent to ${email.trim()}`
                   : "A little profile. A lot of point of view."}
               </p>
             </div>
 
-            {/* Auth tabs: Sign in / Create account (hidden in forgot mode) */}
-            {mode !== "forgot" && (
+            {/* Auth tabs: Sign in / Create account (hidden in forgot mode and OTP verification step) */}
+            {mode !== "forgot" && !(mode === "signup" && signupStep === "otp") && (
               <div
                 className="auth-tabs"
                 role="tablist"
@@ -1107,7 +1172,7 @@ export default function Account() {
                       </>
                     ) : (
                       <>
-                        <span>Continue</span>
+                        <span>Create account</span>
                         <ArrowRight size={16} />
                       </>
                     )}
@@ -1126,7 +1191,7 @@ export default function Account() {
               >
                 <div className="form-field">
                   <label htmlFor="account-otp" className="field-label">
-                    <span>6-digit verification code</span>
+                    <span>Verification code</span>
                     <span className="text-[#1e6bff]" aria-label="Required">
                       *
                     </span>
@@ -1141,13 +1206,13 @@ export default function Account() {
                     value={otp}
                     onChange={(e) => handleFieldChange("otp", e.target.value)}
                     onBlur={() => handleBlur("otp")}
-                    placeholder="123456"
+                    placeholder="••••••"
                     aria-required="true"
                     aria-invalid={Boolean(shouldShowError("otp"))}
                     aria-describedby={
-                      shouldShowError("otp") ? "account-otp-error" : undefined
+                      shouldShowError("otp") ? "account-otp-error" : "account-otp-helper"
                     }
-                    className={`field-input text-center text-lg tracking-[0.25em] font-mono ${
+                    className={`field-input h-14 text-center text-2xl font-mono font-bold tracking-[0.45em] ${
                       shouldShowError("otp") ? "field-error" : ""
                     }`}
                   />
@@ -1158,15 +1223,15 @@ export default function Account() {
                   )}
                 </div>
 
-                <div className="submit-row flex flex-col gap-3">
+                <div className="submit-row sticky bottom-2 z-10 sm:static pt-1">
                   <button
-                    className="button-primary auth-submit"
+                    className="button-primary auth-submit w-full"
                     type="submit"
-                    disabled={registerMutation.isPending}
+                    disabled={registerMutation.isPending || !/^\d{6}$/.test(otp)}
                   >
                     {registerMutation.isPending ? (
                       <>
-                        <span className="spinner" /> Creating account...
+                        <span className="spinner" /> Verifying...
                       </>
                     ) : (
                       <>
@@ -1175,29 +1240,35 @@ export default function Account() {
                       </>
                     )}
                   </button>
+                </div>
 
-                  <div className="flex items-center justify-between text-xs pt-2">
-                    <button
-                      type="button"
-                      className="text-link"
-                      onClick={() => {
-                        setSignupStep("form");
-                        setServerError("");
-                      }}
-                    >
-                      ← Back
-                    </button>
-                    <button
-                      type="button"
-                      className="text-link text-[#1e6bff]"
-                      disabled={requestSignupOtpMutation.isPending}
-                      onClick={handleResendSignupOtp}
-                    >
-                      {requestSignupOtpMutation.isPending
-                        ? "Sending..."
-                        : "Resend code"}
-                    </button>
-                  </div>
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs pt-2 border-t border-[var(--line)]">
+                  <button
+                    type="button"
+                    className="text-xs font-medium text-[var(--muted)] hover:text-[#1e6bff] transition-colors bg-transparent border-0 p-0 cursor-pointer"
+                    onClick={() => {
+                      setSignupStep("form");
+                      setServerError("");
+                      setSuccess("");
+                      setErrors({});
+                      setTouched({});
+                      setIsSubmitted(false);
+                    }}
+                  >
+                    Change email or details
+                  </button>
+                  <button
+                    type="button"
+                    className="text-xs font-semibold text-[#1e6bff] disabled:opacity-50 disabled:cursor-not-allowed bg-transparent border-0 p-0 cursor-pointer"
+                    disabled={resendCooldown > 0 || requestSignupOtpMutation.isPending}
+                    onClick={handleResendSignupOtp}
+                  >
+                    {requestSignupOtpMutation.isPending
+                      ? "Sending..."
+                      : resendCooldown > 0
+                      ? `Resend in ${resendCooldown}s`
+                      : "Resend code"}
+                  </button>
                 </div>
               </form>
             )}

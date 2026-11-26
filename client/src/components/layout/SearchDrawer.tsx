@@ -60,7 +60,11 @@ function getScopedProducts(pathname: string, allProducts: Product[]): Product[] 
       case "editions":
         return allProducts.filter((p) => p.tag?.toLowerCase() === "limited");
       case "flash-sale":
-        return allProducts.filter((p) => p.tag?.toLowerCase() === "flash sale");
+        return allProducts.filter(
+          (p) =>
+            p.tag?.toLowerCase() === "flash sale" ||
+            Boolean(p.compareAtPrice && p.compareAtPrice > p.price)
+        );
       default:
         return allProducts.filter((p) => p.tag?.toLowerCase() === tagSlug);
     }
@@ -164,17 +168,12 @@ export function SearchDrawer({ isOpen, onClose, triggerRef }: SearchDrawerProps)
   // "View all Products (N)" handler
   const handleViewAll = () => {
     const trimmed = query.trim();
-    let target = location;
-    if (trimmed) {
-      target = `/collections?q=${encodeURIComponent(trimmed)}`;
-    }
+    const target = trimmed
+      ? `/collections?q=${encodeURIComponent(trimmed)}`
+      : "/collections";
 
     onClose();
-    if (location === "/collections" && trimmed) {
-      window.location.assign(target);
-    } else {
-      navigate(target);
-    }
+    navigate(target);
   };
 
   return (
@@ -205,7 +204,7 @@ export function SearchDrawer({ isOpen, onClose, triggerRef }: SearchDrawerProps)
               duration: shouldReduceMotion ? 0.05 : 0.25,
               ease: [0.16, 1, 0.3, 1],
             }}
-            className="fixed top-0 right-0 bottom-0 w-full sm:w-[400px] bg-white dark:bg-[#0b0f1a] text-foreground border-l border-black/10 dark:border-white/10 shadow-2xl flex flex-col z-50"
+            className="fixed top-0 right-0 bottom-0 w-full sm:w-[400px] bg-white/90 dark:bg-[#051029]/92 backdrop-blur-2xl text-foreground border-l border-[#0057ff]/18 shadow-[0_24px_60px_rgba(0,87,255,0.18)] flex flex-col z-50"
           >
             {/* Header row */}
             <div className="flex items-center justify-between p-6 border-b border-black/10 dark:border-white/10">
@@ -221,8 +220,14 @@ export function SearchDrawer({ isOpen, onClose, triggerRef }: SearchDrawerProps)
             </div>
 
             {/* Input row */}
-            <div className="p-6 pb-4 border-b border-black/5 dark:border-white/5">
-              <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-sm border border-black/10 dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.02] focus-within:border-[#1e6bff] focus-within:ring-1 focus-within:ring-[#1e6bff] transition-all">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleViewAll();
+              }}
+              className="p-6 pb-4 border-b border-black/5 dark:border-white/5"
+            >
+              <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-sm border border-black/10 dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.02] focus-within:border-[#0057ff] focus-within:ring-1 focus-within:ring-[#0057ff] transition-all">
                 <Search size={17} className="text-muted-foreground shrink-0" />
                 <input
                   ref={inputRef}
@@ -244,7 +249,7 @@ export function SearchDrawer({ isOpen, onClose, triggerRef }: SearchDrawerProps)
                   </button>
                 )}
               </div>
-            </div>
+            </form>
 
             {/* Results list */}
             <div className="flex-1 overflow-y-auto p-6 divide-y divide-black/5 dark:divide-white/5">
@@ -300,11 +305,11 @@ export function SearchDrawer({ isOpen, onClose, triggerRef }: SearchDrawerProps)
             </div>
 
             {/* Footer */}
-            <div className="p-6 border-t border-black/10 dark:border-white/10 bg-white dark:bg-[#0b0f1a]">
+            <div className="p-6 border-t border-[#0057ff]/15 bg-white/70 dark:bg-[#051029]/70 backdrop-blur-md">
               <button
                 type="button"
                 onClick={handleViewAll}
-                className="w-full py-3.5 px-4 bg-black text-white dark:bg-white dark:text-black font-semibold text-xs sm:text-sm uppercase tracking-wider rounded-sm transition-opacity hover:opacity-90 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1e6bff]"
+                className="w-full py-3.5 px-4 rounded-full bg-gradient-to-r from-[#0047ff] via-[#0077ff] to-[#00aeff] text-white font-bold text-xs sm:text-sm uppercase tracking-wider shadow-[0_10px_24px_rgba(0,87,255,0.35)] transition-all hover:brightness-110 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0057ff]"
               >
                 View all Products ({matchingProducts.length})
               </button>

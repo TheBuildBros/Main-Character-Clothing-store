@@ -6,6 +6,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import Account from "./pages/Account";
 import Bag from "./pages/Bag";
 import Collections from "./pages/Collections";
+import Contact from "./pages/Contact";
 import Home from "./pages/Home";
 import Product from "./pages/Product";
 import { StoreLayout, StoreProvider } from "./store/Storefront";
@@ -16,6 +17,7 @@ function Router() {
     <Route path="/collections" component={Collections} />
     <Route path="/shop/:category" component={Collections} />
     <Route path="/limited/:tag" component={Collections} />
+    <Route path="/contact" component={Contact} />
     <Route path="/bag" component={Bag} />
     <Route path="/account" component={Account} />
     <Route path="/product/:id" component={Product} />

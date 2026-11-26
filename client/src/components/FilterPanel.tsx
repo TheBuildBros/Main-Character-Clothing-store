@@ -3,6 +3,7 @@ import { Check, X, ArrowDownUp } from "lucide-react";
 export const categories = [
   "T-shirts",
   "Shirts",
+  "Jerseys",
   "Outerwear",
   "Bottoms",
   "Knitwear",
@@ -12,7 +13,7 @@ export const categories = [
 export const sizes = ["XS", "S", "M", "L", "XL", "One size"];
 
 export const colors = [
-  { name: "Electric blue", hex: "#1e6bff" },
+  { name: "Electric blue", hex: "#0057ff" },
   { name: "Ice white", hex: "#e6e9ee" },
   { name: "Ink black", hex: "#0b0f1a" },
   { name: "Steel", hex: "#8a93a0" },
@@ -38,6 +39,10 @@ export interface FilterPanelProps {
   color: string;
   maxPrice: number;
   sort?: string;
+  availableCategories?: string[];
+  availableSizes?: string[];
+  availableColors?: { name: string; hex: string }[];
+  hideCategoryFilter?: boolean;
   onCategoryChange: (category: string) => void;
   onSizeChange: (size: string) => void;
   onColorChange: (color: string) => void;
@@ -83,6 +88,10 @@ export function FilterPanel({
   color,
   maxPrice,
   sort = "featured",
+  availableCategories = categories,
+  availableSizes = sizes,
+  availableColors = colors,
+  hideCategoryFilter = false,
   onCategoryChange,
   onSizeChange,
   onColorChange,
@@ -107,10 +116,10 @@ export function FilterPanel({
               <button
                 key={opt.value}
                 type="button"
-                className={`filter-chip text-[10px] px-2.5 py-1 rounded-sm border transition-colors ${
+                className={`filter-chip text-[10px] px-2.5 py-1 rounded-full border transition-colors ${
                   sort === opt.value
-                    ? "bg-[#1e6bff] border-[#1e6bff] text-white"
-                    : "border-black/10 dark:border-white/10 text-foreground hover:border-[#1e6bff]"
+                    ? "bg-gradient-to-r from-[#0047ff] to-[#0095ff] border-transparent text-white shadow-sm"
+                    : "border-[#0057ff]/15 text-foreground hover:border-[#0057ff] dark:hover:border-[#6cb8ff]"
                 }`}
                 onClick={() =>
                   onSortChange?.(
@@ -128,28 +137,30 @@ export function FilterPanel({
         </div>
 
         {/* Category */}
-        <div className="filter-group space-y-2">
-          <h3 className="text-[11px] font-bold tracking-widest uppercase text-muted-foreground">
-            Category
-          </h3>
-          <div className="flex flex-wrap gap-1.5">
-            {categories.map((item) => (
-              <button
-                key={item}
-                type="button"
-                className={`filter-chip text-[10px] px-2.5 py-1 rounded-sm border transition-colors ${
-                  category === item
-                    ? "bg-[#1e6bff] border-[#1e6bff] text-white"
-                    : "border-black/10 dark:border-white/10 text-foreground hover:border-[#1e6bff]"
-                }`}
-                onClick={() => onCategoryChange(category === item ? "" : item)}
-              >
-                <span>{item}</span>
-                {category === item && <Check size={11} className="ml-1" />}
-              </button>
-            ))}
+        {!hideCategoryFilter && (
+          <div className="filter-group space-y-2">
+            <h3 className="text-[11px] font-bold tracking-widest uppercase text-muted-foreground">
+              Category
+            </h3>
+            <div className="flex flex-wrap gap-1.5">
+              {availableCategories.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  className={`filter-chip text-[10px] px-2.5 py-1 rounded-full border transition-colors ${
+                    category === item
+                      ? "bg-gradient-to-r from-[#0047ff] to-[#0095ff] border-transparent text-white shadow-sm"
+                      : "border-[#0057ff]/15 text-foreground hover:border-[#0057ff] dark:hover:border-[#6cb8ff]"
+                  }`}
+                  onClick={() => onCategoryChange(category === item ? "" : item)}
+                >
+                  <span>{item}</span>
+                  {category === item && <Check size={11} className="ml-1" />}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Size */}
         <div className="filter-group space-y-2">
@@ -157,14 +168,14 @@ export function FilterPanel({
             Size
           </h3>
           <div className="flex flex-wrap gap-1.5">
-            {sizes.map((item) => (
+            {availableSizes.map((item) => (
               <button
                 key={item}
                 type="button"
-                className={`size-chip min-w-8 h-7 text-[10px] px-2 flex items-center justify-center rounded-sm border transition-colors ${
+                className={`size-chip min-w-8 h-7 text-[10px] px-2 flex items-center justify-center rounded-full border transition-colors ${
                   size === item
-                    ? "bg-[#1e6bff] border-[#1e6bff] text-white"
-                    : "border-black/10 dark:border-white/10 text-foreground hover:border-[#1e6bff]"
+                    ? "bg-gradient-to-r from-[#0047ff] to-[#0095ff] border-transparent text-white shadow-sm"
+                    : "border-[#0057ff]/15 text-foreground hover:border-[#0057ff] dark:hover:border-[#6cb8ff]"
                 }`}
                 onClick={() => onSizeChange(size === item ? "" : item)}
               >
@@ -180,27 +191,27 @@ export function FilterPanel({
             Color
           </h3>
           <div className="flex flex-wrap gap-2">
-            {colors.map((item) => (
+            {availableColors.map((item) => (
               <button
                 key={item.name}
                 type="button"
-                className={`color-filter w-6 h-6 rounded-full border flex items-center justify-center relative transition-all ${
+                className={`color-filter w-7 h-7 rounded-full border flex items-center justify-center relative transition-all ${
                   color === item.name
-                    ? "outline outline-2 outline-offset-1 outline-[#1e6bff] border-[#1e6bff]"
-                    : "border-black/10 dark:border-white/10"
+                    ? "outline outline-2 outline-offset-1 outline-[#0057ff] border-[#0057ff]"
+                    : "border-[#0057ff]/20 dark:border-white/20"
                 }`}
                 onClick={() => onColorChange(color === item.name ? "" : item.name)}
                 aria-label={item.name}
                 title={item.name}
               >
                 <i
-                  className="w-3.5 h-3.5 rounded-full block border border-black/10"
+                  className="w-4 h-4 rounded-full block border border-black/15"
                   style={{ backgroundColor: item.hex }}
                 />
                 {color === item.name && (
                   <Check
                     size={11}
-                    className="absolute inset-0 m-auto text-black dark:text-white drop-shadow"
+                    className="absolute inset-0 m-auto text-[#071430] bg-white/85 rounded-full p-0.5"
                   />
                 )}
               </button>
@@ -226,7 +237,7 @@ export function FilterPanel({
             value={maxPrice}
             onChange={(event) => onPriceChange(Number(event.target.value))}
             aria-label="Maximum price"
-            className="w-full accent-[#1e6bff]"
+            className="w-full accent-[#0057ff]"
           />
           <div className="flex justify-between text-[9px] text-muted-foreground">
             <span>₹1,500</span>
@@ -235,17 +246,17 @@ export function FilterPanel({
         </div>
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-between pt-3 border-t border-black/10 dark:border-white/10">
+        <div className="flex items-center justify-between pt-3 border-t border-[var(--line)]">
           <button
             type="button"
-            className="text-[11px] text-muted-foreground hover:text-[#1e6bff] transition-colors"
+            className="text-[11px] font-semibold text-muted-foreground hover:text-[#0057ff] dark:hover:text-[#6cb8ff] transition-colors"
             onClick={onClear}
           >
             Clear all
           </button>
           <button
             type="button"
-            className="button-primary px-3 py-1.5 text-[11px] font-semibold bg-[#1e6bff] hover:bg-[#0a3fcc] text-white rounded-sm flex items-center gap-1.5 transition-colors"
+            className="btn-electric px-4 py-2 text-[11px] font-bold rounded-full flex items-center gap-1.5"
             onClick={onApply}
           >
             <span>Apply Filters</span>
@@ -266,6 +277,7 @@ export function FilterPanel({
         </div>
         {onClose && (
           <button
+            type="button"
             className="icon-button"
             onClick={onClose}
             aria-label="Close filters"
@@ -301,28 +313,30 @@ export function FilterPanel({
         </div>
 
         {/* Category */}
-        <div className="filter-group">
-          <h3>Category</h3>
-          <div className="filter-options">
-            {categories.map((item) => (
-              <button
-                key={item}
-                type="button"
-                className={`filter-chip ${category === item ? "selected" : ""}`}
-                onClick={() => onCategoryChange(category === item ? "" : item)}
-              >
-                {item}
-                {category === item && <Check size={13} />}
-              </button>
-            ))}
+        {!hideCategoryFilter && (
+          <div className="filter-group">
+            <h3>Category</h3>
+            <div className="filter-options">
+              {availableCategories.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  className={`filter-chip ${category === item ? "selected" : ""}`}
+                  onClick={() => onCategoryChange(category === item ? "" : item)}
+                >
+                  {item}
+                  {category === item && <Check size={13} />}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Size */}
         <div className="filter-group">
           <h3>Size</h3>
           <div className="filter-options size-options">
-            {sizes.map((item) => (
+            {availableSizes.map((item) => (
               <button
                 key={item}
                 type="button"
@@ -339,7 +353,7 @@ export function FilterPanel({
         <div className="filter-group">
           <h3>Color</h3>
           <div className="filter-options color-options">
-            {colors.map((item) => (
+            {availableColors.map((item) => (
               <button
                 key={item.name}
                 type="button"
@@ -349,7 +363,7 @@ export function FilterPanel({
                 title={item.name}
               >
                 <i style={{ backgroundColor: item.hex }} />
-                {color === item.name && <Check size={13} />}
+                {color === item.name && <Check size={13} className="text-[#071430]" />}
               </button>
             ))}
           </div>
@@ -384,8 +398,8 @@ export function FilterPanel({
         {onClose && (
           <button type="button" className="button-primary" onClick={onClose}>
             {totalPieces !== undefined
-              ? `Show ${totalPieces} pieces `
-              : "Apply "}
+              ? `Show ${totalPieces} pieces`
+              : "Apply"}
             <ArrowDownUp size={15} />
           </button>
         )}
