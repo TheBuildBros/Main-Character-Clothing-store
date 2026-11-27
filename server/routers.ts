@@ -11,6 +11,7 @@ import { setSessionCookie } from "./_core/session";
 import { COOKIE_NAME } from "../shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
+import { adminRouter } from "./admin";
 
 const email = z.string().trim().toLowerCase().email();
 
@@ -118,6 +119,7 @@ export const authRouter = router({
 export const appRouter = router({
   system: systemRouter,
   auth: authRouter,
+  admin: adminRouter,
 });
 
 export type AppRouter = typeof appRouter;

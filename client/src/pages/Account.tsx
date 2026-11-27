@@ -605,7 +605,16 @@ export default function Account() {
               </p>
             )}
 
-            <div className="submit-row">
+            <div className="submit-row flex flex-col gap-3">
+              {user.role === "admin" && (
+                <Link
+                  href="/admin"
+                  className="button-primary auth-submit"
+                >
+                  <span>Open admin panel</span>
+                  <ArrowRight size={16} />
+                </Link>
+              )}
               <button
                 type="button"
                 className="button-primary auth-submit"
