@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import {
   Menu,
   Search,
+  Heart,
   ShoppingBag,
   UserRound,
   Sun,
@@ -19,7 +20,7 @@ interface NavbarProps {
 }
 
 export function Navbar({ className = "", brandWordmark = "主人公" }: NavbarProps) {
-  const { count, theme, toggleTheme } = useStore();
+  const { count, favorites, theme, toggleTheme } = useStore();
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isSearchDrawerOpen, setIsSearchDrawerOpen] = useState(false);
@@ -89,6 +90,19 @@ export function Navbar({ className = "", brandWordmark = "主人公" }: NavbarPr
             >
               {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
             </motion.button>
+
+            <Link
+              href="/wishlist"
+              className="relative w-9 h-9 rounded-full inline-flex items-center justify-center text-foreground/85 hover:text-[#0057ff] dark:hover:text-[#6cb8ff] hover:bg-[#0057ff]/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0057ff]"
+              aria-label={`Wishlist, ${favorites.length} saved items`}
+            >
+              <Heart size={18} />
+              {favorites.length > 0 && (
+                <span className="bag-count absolute -top-0.5 -right-0.5">
+                  {favorites.length}
+                </span>
+              )}
+            </Link>
 
             <Link
               href="/account"

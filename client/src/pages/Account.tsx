@@ -2,6 +2,7 @@ import { useState, useEffect, type FormEvent } from "react";
 import { ArrowRight, Check, Eye, EyeOff, UserRound } from "lucide-react";
 import { Link } from "wouter";
 import { trpc } from "@/lib/trpc";
+import AccountDashboard from "@/components/account/AccountDashboard";
 
 function getCleanErrorMessage(err: unknown, fallback: string): string {
   const raw =
@@ -23,6 +24,7 @@ export default function Account() {
   const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [signupStep, setSignupStep] = useState<"form" | "otp">("form");
   const [forgotStep, setForgotStep] = useState<"request" | "verify" | "success">("request");
+  const [showResetFromAccount, setShowResetFromAccount] = useState(false);
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -58,6 +60,28 @@ export default function Account() {
   }>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
 
+  const resetFormState = () => {
+    setMode("signin");
+    setSignupStep("form");
+    setForgotStep("request");
+    setShowResetFromAccount(false);
+    setName("");
+    setEmail("");
+    setCountryCode("+91");
+    setPhone("");
+    setPassword("");
+    setConfirmPassword("");
+    setOtp("");
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+    setErrors({});
+    setTouched({});
+    setIsSubmitted(false);
+    setSuccess("");
+    setServerError("");
+    setResendCooldown(0);
+  };
+
   const loginMutation = trpc.auth.login.useMutation();
   const requestSignupOtpMutation = trpc.auth.requestSignupOtp.useMutation({
     onSuccess: () => {
@@ -80,17 +104,8 @@ export default function Account() {
   });
   const registerMutation = trpc.auth.register.useMutation({
     onSuccess: async () => {
+      resetFormState();
       await utils.auth.me.invalidate();
-      setPassword("");
-      setConfirmPassword("");
-      setOtp("");
-      setErrors({});
-      setTouched({});
-      setIsSubmitted(false);
-      setServerError("");
-      setSuccess("");
-      setResendCooldown(0);
-      setSignupStep("form");
     },
     onError: (err) => {
       setServerError(getCleanErrorMessage(err, "Registration failed. Please check your code."));
@@ -343,12 +358,10 @@ export default function Account() {
 
     try {
       await loginMutation.mutateAsync({ email: email.trim(), password });
+      resetFormState();
       await utils.auth.me.invalidate();
-      setPassword("");
-      setTouched({});
-      setIsSubmitted(false);
-    } catch (err: any) {
-      setServerError(err.message || "Failed to sign in. Please try again.");
+    } catch (err: unknown) {
+      setServerError(getCleanErrorMessage(err, "Failed to sign in. Please try again."));
     }
   };
 
@@ -453,8 +466,8 @@ export default function Account() {
       setTouched({});
       setIsSubmitted(false);
       setSuccess(`If an account exists for ${email.trim()}, a code has been sent.`);
-    } catch (err: any) {
-      setServerError(err.message || "Unable to request password reset.");
+    } catch (err: unknown) {
+      setServerError(getCleanErrorMessage(err, "Unable to request password reset."));
     }
   };
 
@@ -494,9 +507,28 @@ export default function Account() {
       setOtp("");
       setTouched({});
       setIsSubmitted(false);
-    } catch (err: any) {
-      setServerError(err.message || "Password reset failed.");
+    } catch (err: unknown) {
+      setServerError(getCleanErrorMessage(err, "Password reset failed."));
     }
+  };
+
+  const handleOpenChangePassword = () => {
+    if (!user) return;
+    setShowResetFromAccount(true);
+    setMode("forgot");
+    setForgotStep("request");
+    setEmail(user.email);
+    setPassword("");
+    setConfirmPassword("");
+    setOtp("");
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+    setErrors({});
+    setTouched({});
+    setIsSubmitted(false);
+    setSuccess("");
+    setServerError("");
+    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
   };
 
   // 6. Log out
@@ -504,9 +536,10 @@ export default function Account() {
     setServerError("");
     try {
       await logoutMutation.mutateAsync();
+      resetFormState();
       await utils.auth.me.invalidate();
-    } catch (err: any) {
-      setServerError(err.message || "Failed to log out.");
+    } catch (err: unknown) {
+      setServerError(getCleanErrorMessage(err, "Failed to log out. Please try again."));
     }
   };
 
@@ -516,6 +549,49 @@ export default function Account() {
     registerMutation.isPending ||
     requestPasswordResetMutation.isPending ||
     resetPasswordMutation.isPending;
+
+  if (meQuery.isLoading) {
+    return (
+      <div className="min-h-[calc(100vh-120px)] flex items-center justify-center bg-[var(--surface)] px-4 py-16">
+        <div
+          role="status"
+          aria-live="polite"
+          className="w-full max-w-sm rounded-md border border-[var(--line)] bg-[var(--page)] p-8 flex flex-col items-center text-center gap-4"
+        >
+          <span
+            aria-hidden="true"
+            className="h-8 w-8 rounded-full border-2 border-[var(--line)] border-t-[var(--blue)] animate-spin"
+          />
+          <div>
+            <p className="text-sm font-semibold text-[var(--text)] m-0">
+              Checking your session...
+            </p>
+            <p className="text-xs text-[var(--muted)] mt-1 mb-0">
+              Just a moment while we load your account.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (user && !showResetFromAccount) {
+    return (
+      <AccountDashboard
+        user={{
+          name: user.name,
+          email: user.email,
+          phone: user.phone ?? null,
+          role: user.role,
+          lastSignedIn: user.lastSignedIn,
+        }}
+        onChangePassword={handleOpenChangePassword}
+        onLogout={handleLogout}
+        isLoggingOut={logoutMutation.isPending}
+        logoutError={serverError}
+      />
+    );
+  }
 
   return (
     <div className="account-page">
@@ -547,93 +623,8 @@ export default function Account() {
 
       {/* Right Column: Account Content & Form */}
       <section className="account-panel" aria-label="Account access panel">
-        {user ? (
-          /* 6. Signed-in state */
-          <div className="account-card">
-            <nav aria-label="Breadcrumbs" className="breadcrumbs">
-              <Link href="/" className="hover:text-foreground transition-colors">
-                HOME
-              </Link>{" "}
-              <span>/</span> YOUR ACCOUNT
-            </nav>
-
-            <div className="account-header">
-              <div className="account-mark" aria-hidden="true">
-                <UserRound size={22} />
-              </div>
-              <span className="eyebrow">YOUR SPACE, YOUR PACE</span>
-              <h2>Good to see you, {user.name}.</h2>
-              <p className="account-intro">
-                You're signed in to your Main Character profile.
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-3 py-4 border-y border-[var(--line)] my-6 text-xs">
-              <div className="flex justify-between items-center">
-                <span className="text-[var(--muted)] uppercase tracking-wider font-semibold">
-                  Name
-                </span>
-                <span className="font-medium text-[var(--text)]">{user.name}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-[var(--muted)] uppercase tracking-wider font-semibold">
-                  Email
-                </span>
-                <span className="font-medium text-[var(--text)]">{user.email}</span>
-              </div>
-              {user.phone && (
-                <div className="flex justify-between items-center">
-                  <span className="text-[var(--muted)] uppercase tracking-wider font-semibold">
-                    Phone
-                  </span>
-                  <span className="font-medium text-[var(--text)]">{user.phone}</span>
-                </div>
-              )}
-              <div className="flex justify-between items-center">
-                <span className="text-[var(--muted)] uppercase tracking-wider font-semibold">
-                  Role
-                </span>
-                <span className="font-medium text-[var(--text)] capitalize">
-                  {user.role}
-                </span>
-              </div>
-            </div>
-
-            {serverError && (
-              <p className="form-alert error mb-4" role="alert">
-                {serverError}
-              </p>
-            )}
-
-            <div className="submit-row flex flex-col gap-3">
-              {user.role === "admin" && (
-                <Link
-                  href="/admin"
-                  className="button-primary auth-submit"
-                >
-                  <span>Open admin panel</span>
-                  <ArrowRight size={16} />
-                </Link>
-              )}
-              <button
-                type="button"
-                className="button-primary auth-submit"
-                disabled={logoutMutation.isPending}
-                onClick={handleLogout}
-              >
-                {logoutMutation.isPending ? (
-                  <>
-                    <span className="spinner" /> Signing out...
-                  </>
-                ) : (
-                  <span>Log out</span>
-                )}
-              </button>
-            </div>
-          </div>
-        ) : (
-          /* Authentication flow */
-          <div className="account-card">
+        {/* Authentication / Password Reset flow */}
+        <div className="account-card">
             {/* Breadcrumbs */}
             <nav aria-label="Breadcrumbs" className="breadcrumbs">
               <Link href="/" className="hover:text-foreground transition-colors">
@@ -1351,11 +1342,21 @@ export default function Account() {
                       type="button"
                       className="text-link"
                       onClick={() => {
-                        setMode("signin");
-                        setServerError("");
+                        if (user && showResetFromAccount) {
+                          setShowResetFromAccount(false);
+                          setMode("signin");
+                          setForgotStep("request");
+                          setServerError("");
+                          setSuccess("");
+                        } else {
+                          setMode("signin");
+                          setServerError("");
+                        }
                       }}
                     >
-                      ← Back to Sign in
+                      {user && showResetFromAccount
+                        ? "← Back to account"
+                        : "← Back to Sign in"}
                     </button>
                   </div>
                 </div>
@@ -1619,20 +1620,24 @@ export default function Account() {
                     type="button"
                     className="button-primary auth-submit"
                     onClick={() => {
+                      setShowResetFromAccount(false);
                       setMode("signin");
                       setForgotStep("request");
                       setSuccess("");
                       setServerError("");
                     }}
                   >
-                    <span>Sign in with new password</span>
+                    <span>
+                      {user && showResetFromAccount
+                        ? "Back to account"
+                        : "Sign in with new password"}
+                    </span>
                     <ArrowRight size={16} />
                   </button>
                 </div>
               </div>
             )}
           </div>
-        )}
 
         {/* Footer Link */}
         <div className="account-bottom">

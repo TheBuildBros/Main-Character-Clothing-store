@@ -445,12 +445,15 @@ h3,
   overflow: hidden;
   border-radius: 12px;
   background: var(--surface-2);
+  isolation: isolate;
 }
 
 .product-image-link {
   position: absolute;
   inset: 0;
   display: block;
+  z-index: 0;
+  isolation: isolate;
 }
 
 .product-image-link > img,
@@ -494,7 +497,7 @@ h3,
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #0047ff;
-  z-index: 2;
+  z-index: 10;
 }
 
 .favorite-button {
@@ -515,7 +518,7 @@ h3,
   transform: translateY(-4px);
   transition: all 0.22s ease;
   cursor: pointer;
-  z-index: 2;
+  z-index: 20;
 }
 
 .product-card:hover .favorite-button,
@@ -555,13 +558,19 @@ h3,
   transform: translateY(8px);
   transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
   cursor: pointer;
-  z-index: 2;
+  pointer-events: auto;
+  z-index: 20;
 }
 
 .product-card:hover .quick-add,
-.product-card:focus-within .quick-add {
+.product-card:focus-within .quick-add,
+.quick-add:focus-visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+.quick-add:active {
+  transform: scale(0.98);
 }
 
 .quick-add-plus {
@@ -2194,7 +2203,7 @@ h3,
   color: #60c5ff;
 }
 
-@media (hover: none) {
+@media (hover: none), (pointer: coarse) {
   .favorite-button,
   .quick-add {
     opacity: 1;

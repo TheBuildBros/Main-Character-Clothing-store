@@ -1,7 +1,7 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { X, ArrowRight, Search, Sun, Moon, ShoppingBag, UserRound, SlidersHorizontal } from "lucide-react";
+import { X, ArrowRight, Search, Sun, Moon, Heart, ShoppingBag, UserRound, SlidersHorizontal } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -21,7 +21,7 @@ interface MobileDrawerProps {
 export function MobileDrawer({ isOpen, onClose, brandWordmark = "主人公" }: MobileDrawerProps) {
   const [location, navigate] = useLocation();
   const shouldReduceMotion = useReducedMotion();
-  const { count, theme, toggleTheme } = useStore();
+  const { count, favorites, theme, toggleTheme } = useStore();
   const [searchQuery, setSearchQuery] = useState("");
 
   // Drawer filter states synchronized with URL
@@ -376,7 +376,7 @@ export function MobileDrawer({ isOpen, onClose, brandWordmark = "主人公" }: M
 
             {/* Bottom Actions & Utilities in Drawer */}
             <div className="p-5 border-t border-black/10 dark:border-white/10 bg-black/[0.02] dark:bg-white/[0.02] text-xs space-y-3">
-              <div className="flex items-center justify-between pt-1">
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
                 <Link
                   href="/account"
                   onClick={onClose}
@@ -384,6 +384,15 @@ export function MobileDrawer({ isOpen, onClose, brandWordmark = "主人公" }: M
                 >
                   <UserRound size={16} />
                   <span>Your Account</span>
+                </Link>
+
+                <Link
+                  href="/wishlist"
+                  onClick={onClose}
+                  className="flex items-center gap-1.5 text-foreground hover:text-[#1e6bff] transition-colors font-medium text-xs tracking-wider uppercase"
+                >
+                  <Heart size={16} />
+                  <span>Wishlist ({favorites.length})</span>
                 </Link>
 
                 <Link

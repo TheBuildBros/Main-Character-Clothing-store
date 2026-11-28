@@ -14,6 +14,7 @@ import Collections from "./pages/Collections";
 import Contact from "./pages/Contact";
 import Home from "./pages/Home";
 import Product from "./pages/Product";
+import Wishlist from "./pages/Wishlist";
 import { StoreLayout, StoreProvider } from "./store/Storefront";
 
 function AdminRoutes() {
@@ -61,6 +62,7 @@ function Router() {
         <Route path="/limited/:tag" component={Collections} />
         <Route path="/contact" component={Contact} />
         <Route path="/bag" component={Bag} />
+        <Route path="/wishlist" component={Wishlist} />
         <Route path="/account" component={Account} />
         <Route path="/product/:id" component={Product} />
         <Route path="/404" component={NotFound} />
